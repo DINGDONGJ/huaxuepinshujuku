@@ -339,6 +339,62 @@ def import_json():
     except Exception as e:
         return jsonify({'error': f'导入失败: {str(e)}'}), 500
 
+@app.route('/api/delete', methods=['POST'])
+def delete_chemical():
+    """删除化学品及其所有相关数据"""
+    try:
+        data = request.get_json()
+        chemical_id = data.get('chemical_id')
+        
+        if not chemical_id:
+            return jsonify({'error': '缺少化学品ID'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # 获取化学品信息（用于返回消息）
+            cursor.execute("""
+                SELECT 中文名, CAS号 
+                FROM 化学品 
+                WHERE 编号 = %s
+            """, (chemical_id,))
+            
+            chemical = cursor.fetchone()
+            
+            if not chemical:
+                cursor.close()
+                conn.close()
+                return jsonify({'error': '化学品不存在'}), 404
+            
+            chemical_name = chemical['中文名']
+            cas_number = chemical['CAS号']
+            
+            # 删除化学品（外键级联会自动删除别名、MSDS文档和章节）
+            cursor.execute("DELETE FROM 化学品 WHERE 编号 = %s", (chemical_id,))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return jsonify({
+                'success': True,
+                'message': f'成功删除化学品: {chemical_name}',
+                'data': {
+                    '化学品名称': chemical_name,
+                    'CAS号': cas_number
+                }
+            })
+            
+        except Exception as e:
+            conn.rollback()
+            cursor.close()
+            conn.close()
+            raise e
+            
+    except Exception as e:
+        return jsonify({'error': f'删除失败: {str(e)}'}), 500
+
 if __name__ == '__main__':
     print("=" * 60)
     print("🔬 精简版危化品数据库 Web应用")

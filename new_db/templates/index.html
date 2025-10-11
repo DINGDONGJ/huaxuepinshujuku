@@ -575,6 +575,346 @@
             60%, 100% { content: '...'; }
         }
 
+        /* 化学品列表侧边栏样式 */
+        .list-btn {
+            padding: 12px 25px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .list-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 450px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.2);
+            transition: right 0.4s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .sidebar-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .sidebar-search {
+            padding: 15px 25px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-search input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .chemical-list-item {
+            padding: 15px 25px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chemical-list-item:hover {
+            background: #f8f9fa;
+            padding-left: 30px;
+        }
+
+        .chemical-list-item:active {
+            background: #e9ecef;
+        }
+
+        .chemical-name-item {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .chemical-info {
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .chemical-info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+
+        .empty-list {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+        }
+
+        .empty-list-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .list-stats {
+            padding: 15px 25px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 删除按钮样式 */
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+        }
+
+        .delete-btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        /* 确认对话框样式 */
+        .confirm-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s;
+        }
+
+        .confirm-dialog-overlay.show {
+            display: flex;
+        }
+
+        .confirm-dialog {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .confirm-dialog-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .confirm-dialog-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .confirm-dialog-message {
+            font-size: 15px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .confirm-dialog-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .confirm-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .confirm-btn-cancel {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .confirm-btn-cancel:hover {
+            background: #dee2e6;
+        }
+
+        .confirm-btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .confirm-btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .chemical-list-item-content {
+            flex: 1;
+        }
+
+        .chemical-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chemical-list-item-actions {
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .chemical-list-item:hover .chemical-list-item-actions {
+            opacity: 1;
+        }
+
+        .action-btn-icon {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            transition: transform 0.2s;
+        }
+
+        .action-btn-icon:hover {
+            transform: scale(1.2);
+        }
+
         /* 响应式设计 */
         @media (max-width: 768px) {
             .header h1 {
@@ -594,10 +934,66 @@
             .info-grid {
                 grid-template-columns: 1fr;
             }
+
+            .sidebar {
+                width: 100%;
+                right: -100%;
+            }
+
+            .list-btn {
+                margin-left: 0;
+                margin-top: 10px;
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- 删除确认对话框 -->
+    <div class="confirm-dialog-overlay" id="confirmDialog">
+        <div class="confirm-dialog">
+            <div class="confirm-dialog-icon">⚠️</div>
+            <div class="confirm-dialog-title">确认删除</div>
+            <div class="confirm-dialog-message" id="confirmMessage">
+                确定要删除这个化学品吗？此操作不可恢复！
+            </div>
+            <div class="confirm-dialog-buttons">
+                <button class="confirm-btn confirm-btn-cancel" onclick="closeConfirmDialog()">取消</button>
+                <button class="confirm-btn confirm-btn-delete" onclick="confirmDelete()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 侧边栏遮罩层 -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- 化学品列表侧边栏 -->
+    <div class="sidebar" id="chemicalSidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">📋 化学品列表</div>
+            <button class="sidebar-close" onclick="toggleSidebar()">×</button>
+        </div>
+        
+        <div class="list-stats" id="listStats">
+            <span id="statsText">加载中...</span>
+        </div>
+        
+        <div class="sidebar-search">
+            <input 
+                type="text" 
+                id="sidebarSearchInput" 
+                placeholder="在列表中搜索..."
+                oninput="filterChemicalList()"
+            >
+        </div>
+        
+        <div class="sidebar-content" id="sidebarContent">
+            <div class="loading-spinner">
+                <div>⏳ 加载中...</div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>🧪 危化品MSDS查询系统</h1>
@@ -614,6 +1010,7 @@
                     onkeypress="if(event.key === 'Enter') search()"
                 >
                 <button class="search-btn" onclick="search()">🔍 查询</button>
+                <button class="list-btn" onclick="toggleSidebar()">📋 查看列表</button>
             </div>
             <div class="search-hint">
                 💡 支持查询：中文名（如：甲醛）、英文名（如：formaldehyde）、CAS号（如：50-00-0）、别名（如：福尔马林）
@@ -702,9 +1099,14 @@
 
             let html = `
                 <div class="basic-info">
-                    <div class="chemical-name">
-                        <span>${basic.中文名}</span>
-                        <span class="en-name">${basic.英文名 || ''}</span>
+                    <div class="chemical-name" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <span>${basic.中文名}</span>
+                            <span class="en-name">${basic.英文名 || ''}</span>
+                        </div>
+                        <button class="delete-btn" onclick="showDeleteConfirm(${basic.编号}, '${basic.中文名.replace(/'/g, "\\'")}', '${basic.CAS号 || ''}', function() { document.getElementById('searchInput').value = ''; });">
+                            🗑️ 删除化学品
+                        </button>
                     </div>
                     
                     <div class="info-grid">
@@ -2171,7 +2573,12 @@
                     document.getElementById('selectedFile').classList.remove('show');
                     document.getElementById('importBtn').classList.remove('show');
                     
-                    // 3秒后自动搜索导入的化学品
+                    // 刷新化学品列表（如果已加载）
+                    if (allChemicals.length > 0) {
+                        loadChemicalList();
+                    }
+                    
+                    // 2秒后自动搜索导入的化学品
                     setTimeout(() => {
                         document.getElementById('searchInput').value = data.data.化学品名称;
                         search();
@@ -2198,6 +2605,249 @@
             setTimeout(() => {
                 notification.remove();
             }, 4000);
+        }
+
+        // 全局变量存储化学品列表
+        let allChemicals = [];
+        let filteredChemicals = [];
+        let currentChemicalId = null;  // 当前操作的化学品ID
+        let deleteCallback = null;  // 删除成功后的回调函数
+
+        // 切换侧边栏显示/隐藏
+        function toggleSidebar() {
+            const sidebar = document.getElementById('chemicalSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isActive = sidebar.classList.contains('active');
+            
+            if (isActive) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+                
+                // 如果列表为空，则加载列表
+                if (allChemicals.length === 0) {
+                    loadChemicalList();
+                }
+            }
+        }
+
+        // 加载化学品列表
+        async function loadChemicalList() {
+            const contentDiv = document.getElementById('sidebarContent');
+            const statsDiv = document.getElementById('statsText');
+            
+            try {
+                contentDiv.innerHTML = '<div class="loading-spinner"><div>⏳ 加载中...</div></div>';
+                statsDiv.textContent = '加载中...';
+                
+                const response = await fetch('/api/list');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    allChemicals = data.chemicals || [];
+                    filteredChemicals = [...allChemicals];
+                    
+                    // 更新统计信息
+                    statsDiv.textContent = `共 ${allChemicals.length} 种化学品`;
+                    
+                    // 渲染列表
+                    renderChemicalList(filteredChemicals);
+                } else {
+                    throw new Error(data.error || '加载失败');
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `
+                    <div class="empty-list">
+                        <div class="empty-list-icon">⚠️</div>
+                        <div>加载失败: ${error.message}</div>
+                    </div>
+                `;
+                statsDiv.textContent = '加载失败';
+            }
+        }
+
+        // 渲染化学品列表
+        function renderChemicalList(chemicals) {
+            const contentDiv = document.getElementById('sidebarContent');
+            
+            if (chemicals.length === 0) {
+                contentDiv.innerHTML = `
+                    <div class="empty-list">
+                        <div class="empty-list-icon">📭</div>
+                        <div>暂无化学品数据</div>
+                        <div style="margin-top: 10px; font-size: 12px;">请先导入化学品数据</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            chemicals.forEach(chem => {
+                const cas = chem.CAS号 ? highlightCASNumbers(chem.CAS号) : '<span style="color: #999;">无CAS号</span>';
+                const englishName = chem.英文名 || '<span style="color: #999;">无英文名</span>';
+                const chapterCount = chem.章节数 || 0;
+                
+                html += `
+                    <div class="chemical-list-item">
+                        <div class="chemical-list-item-content" onclick="selectChemicalFromList('${(chem.CAS号 || chem.中文名).replace(/'/g, "\\'")}')">
+                            <div class="chemical-name-item">${chem.中文名}</div>
+                            <div class="chemical-info">
+                                <div class="chemical-info-item">
+                                    <span>🔢</span>
+                                    <span>${cas}</span>
+                                </div>
+                                <div class="chemical-info-item">
+                                    <span>🌐</span>
+                                    <span>${englishName}</span>
+                                </div>
+                                <div class="chemical-info-item">
+                                    <span>📄</span>
+                                    <span>${chapterCount} 个章节</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chemical-list-item-actions">
+                            <button class="action-btn-icon" onclick="event.stopPropagation(); showDeleteConfirm(${chem.编号}, '${chem.中文名.replace(/'/g, "\\'")}', '${chem.CAS号 || ''}');" title="删除">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contentDiv.innerHTML = html;
+        }
+
+        // 过滤化学品列表
+        function filterChemicalList() {
+            const searchInput = document.getElementById('sidebarSearchInput');
+            const keyword = searchInput.value.trim().toLowerCase();
+            
+            if (!keyword) {
+                filteredChemicals = [...allChemicals];
+            } else {
+                filteredChemicals = allChemicals.filter(chem => {
+                    return (
+                        (chem.中文名 && chem.中文名.toLowerCase().includes(keyword)) ||
+                        (chem.英文名 && chem.英文名.toLowerCase().includes(keyword)) ||
+                        (chem.CAS号 && chem.CAS号.includes(keyword))
+                    );
+                });
+            }
+            
+            // 更新统计信息
+            const statsDiv = document.getElementById('statsText');
+            if (keyword) {
+                statsDiv.textContent = `找到 ${filteredChemicals.length} 种化学品（共 ${allChemicals.length} 种）`;
+            } else {
+                statsDiv.textContent = `共 ${allChemicals.length} 种化学品`;
+            }
+            
+            renderChemicalList(filteredChemicals);
+        }
+
+        // 从列表中选择化学品
+        function selectChemicalFromList(identifier) {
+            // 设置搜索框的值
+            document.getElementById('searchInput').value = identifier;
+            
+            // 关闭侧边栏
+            toggleSidebar();
+            
+            // 执行搜索
+            search();
+        }
+
+        // 显示删除确认对话框
+        function showDeleteConfirm(chemicalId, chemicalName, casNumber, callback) {
+            currentChemicalId = chemicalId;
+            deleteCallback = callback;
+            
+            const message = document.getElementById('confirmMessage');
+            const casInfo = casNumber ? ` (CAS: ${casNumber})` : '';
+            message.innerHTML = `
+                确定要删除化学品 <strong>"${chemicalName}"${casInfo}</strong> 吗？<br>
+                <span style="color: #dc3545; font-size: 14px; margin-top: 10px; display: inline-block;">
+                    ⚠️ 此操作将删除该化学品的所有相关数据（别名、MSDS文档、章节等），且不可恢复！
+                </span>
+            `;
+            
+            document.getElementById('confirmDialog').classList.add('show');
+        }
+
+        // 关闭确认对话框
+        function closeConfirmDialog() {
+            document.getElementById('confirmDialog').classList.remove('show');
+            currentChemicalId = null;
+            deleteCallback = null;
+        }
+
+        // 确认删除
+        async function confirmDelete() {
+            if (!currentChemicalId) {
+                closeConfirmDialog();
+                return;
+            }
+            
+            const deleteBtn = document.querySelector('.confirm-btn-delete');
+            const originalText = deleteBtn.textContent;
+            
+            try {
+                deleteBtn.textContent = '删除中...';
+                deleteBtn.disabled = true;
+                
+                const success = await deleteChemical(currentChemicalId);
+                
+                closeConfirmDialog();
+                
+                // 如果删除成功，执行回调（如清空搜索框）
+                if (success && deleteCallback && typeof deleteCallback === 'function') {
+                    deleteCallback();
+                }
+                
+            } catch (error) {
+                deleteBtn.textContent = originalText;
+                deleteBtn.disabled = false;
+            }
+        }
+
+        // 删除化学品
+        async function deleteChemical(chemicalId) {
+            try {
+                const response = await fetch('/api/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chemical_id: chemicalId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showNotification(`✅ ${data.message}`, 'success');
+                    
+                    // 清空结果区域
+                    document.getElementById('resultsSection').innerHTML = '';
+                    
+                    // 刷新化学品列表（如果已加载）
+                    if (allChemicals.length > 0) {
+                        loadChemicalList();
+                    }
+                    
+                    return true;
+                } else {
+                    showNotification(`❌ ${data.error || '删除失败'}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                showNotification(`❌ 网络错误: ${error.message}`, 'error');
+                return false;
+            }
         }
 
         // 页面加载时聚焦搜索框

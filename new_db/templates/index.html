@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>危化品MSDS查询系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .search-hint {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .import-toggle-btn {
+            padding: 10px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 15px;
+        }
+
+        .import-toggle-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .import-section {
+            display: none;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 2px dashed #d1d5db;
+        }
+
+        .import-section.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            border: 2px dashed #9ca3af;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e9ecff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .import-btn {
+            display: none;
+            margin-top: 15px;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .import-btn.show {
+            display: inline-block;
+        }
+
+        .import-btn:hover {
+            background: #5568d3;
+        }
+
+        .selected-file {
+            display: none;
+            margin-top: 15px;
+            padding: 12px 18px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .selected-file.show {
+            display: block;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            background: #10b981;
+        }
+
+        .notification.error {
+            background: #ef4444;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: fadeInUp 0.5s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .basic-info {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chemical-name {
+            font-size: 2em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chemical-name .en-name {
+            font-size: 0.6em;
+            color: #7f8c8d;
+            font-weight: 400;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .msds-section {
+            margin-top: 30px;
+        }
+
+        .msds-title {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .msds-meta {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .chapter-item {
+            margin-bottom: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .chapter-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 3px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .chapter-header {
+            background: linear-gradient(to right, #f8f9fa, #ffffff);
+            padding: 18px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.3s;
+        }
+
+        .chapter-header:hover {
+            background: linear-gradient(to right, #e9ecef, #f8f9fa);
+        }
+
+        .chapter-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .chapter-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .chapter-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .chapter-icon {
+            color: #667eea;
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .chapter-item.active .chapter-icon {
+            transform: rotate(180deg);
+        }
+
+        .chapter-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+        }
+
+        .chapter-item.active .chapter-content {
+            max-height: 15000px;
+            transition: max-height 0.6s ease-in;
+        }
+
+        .chapter-body {
+            padding: 25px;
+            background: #ffffff;
+            border-top: 1px solid #e9ecef;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow-x: auto;
+        }
+
+        .chapter-text {
+            line-height: 1.8;
+            color: #495057;
+            white-space: pre-line;
+            font-size: 15px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            width: 100%;
+        }
+
+        /* MSDS第一部分和第二部分样式优化 */
+        .chapter-text-formatted {
+            line-height: 1.8;
+            color: #495057;
+            font-size: 15px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* H/P编号的行高单独控制，避免过多空白 */
+        .chapter-text-formatted > div[style*="margin-bottom: 8px"] {
+            line-height: 1.5;
+        }
+        
+        .chapter-text-formatted > div {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+        
+        .chapter-text-formatted span {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .msds-field {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+
+        .msds-field-label {
+            font-weight: 700;
+            color: #667eea;
+            min-width: 180px;
+            margin-right: 15px;
+            font-size: 14px;
+        }
+
+        .msds-field-value {
+            color: #2d3748;
+            flex: 1;
+            font-size: 15px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
+        }
+
+        .msds-section-title {
+            font-weight: 700;
+            color: #764ba2;
+            font-size: 16px;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .msds-section-title:first-child {
+            margin-top: 0;
+        }
+
+        /* CAS号样式 - 红色加粗 */
+        .cas-number {
+            color: #dc3545;
+            font-weight: 700;
+        }
+
+        /* MSDS图片样式 */
+        .msds-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #e9ecef;
+        }
+
+        .msds-image-item {
+            flex: 0 0 auto;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .msds-image-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .msds-image-item img {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: white;
+            padding: 10px;
+        }
+
+        .msds-image-caption {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px 20px;
+            color: #856404;
+            margin-top: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .chemical-name {
+                font-size: 1.5em;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 危化品MSDS查询系统</h1>
+            <p>专业化学品安全数据查询平台</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="请输入化学品中文名、英文名、CAS号或别名..."
+                    onkeypress="if(event.key === 'Enter') search()"
+                >
+                <button class="search-btn" onclick="search()">🔍 查询</button>
+            </div>
+            <div class="search-hint">
+                💡 支持查询：中文名（如：甲醛）、英文名（如：formaldehyde）、CAS号（如：50-00-0）、别名（如：福尔马林）
+            </div>
+            
+            <button class="import-toggle-btn" onclick="toggleImport()">
+                📤 导入MSDS数据
+            </button>
+            
+            <div class="import-section" id="importSection">
+                <h3 style="color: #374151; margin-bottom: 20px; font-size: 18px;">📥 上传JSON文件</h3>
+                
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">点击选择文件或拖拽到此处</div>
+                    <div class="upload-hint">仅支持 .json 格式文件</div>
+                </div>
+                
+                <input type="file" id="fileInput" class="file-input" accept=".json" onchange="handleFileSelect(event)">
+                
+                <div class="selected-file" id="selectedFile"></div>
+                
+                <button class="import-btn" id="importBtn" onclick="importData()">
+                    🚀 开始导入
+                </button>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <!-- 查询结果将显示在这里 -->
+        </div>
+    </div>
+
+    <script>
+        async function search() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            
+            if (!keyword) {
+                alert('请输入搜索关键词');
+                return;
+            }
+
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.innerHTML = '<div class="loading">正在查询</div>';
+            resultsSection.classList.add('show');
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword: keyword })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    resultsSection.innerHTML = `
+                        <div class="error-message">
+                            ❌ ${data.error || '查询失败，请重试'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsSection.innerHTML = `
+                    <div class="error-message">
+                        ❌ 网络错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 高亮CAS号 - 将CAS号格式的文本替换为红色加粗样式
+        function highlightCASNumbers(html) {
+            if (!html) return html;
+            // CAS号格式：数字-数字-数字（如 50-00-0, 64-17-5, 7732-18-5）
+            // 匹配格式：2-7位数字 + 连字符 + 2位数字 + 连字符 + 1位数字
+            const casRegex = /\b(\d{2,7}-\d{2}-\d)\b/g;
+            return html.replace(casRegex, '<span class="cas-number">$1</span>');
+        }
+
+        function displayResults(data) {
+            const basic = data.basic_info;
+            const chapters = data.msds_chapters;
+
+            let html = `
+                <div class="basic-info">
+                    <div class="chemical-name">
+                        <span>${basic.中文名}</span>
+                        <span class="en-name">${basic.英文名 || ''}</span>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">CAS号</div>
+                            <div class="info-value">${highlightCASNumbers(basic.CAS号)}</div>
+                        </div>
+                        ${basic.分子式 ? `
+                        <div class="info-item">
+                            <div class="info-label">分子式</div>
+                            <div class="info-value">${basic.分子式}</div>
+                        </div>
+                        ` : ''}
+                        ${basic.所有别名 ? `
+                        <div class="info-item">
+                            <div class="info-label">别名</div>
+                            <div class="info-value">${basic.所有别名}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            if (chapters && chapters.length > 0) {
+                html += `
+                    <div class="msds-section">
+                        <h2 class="msds-title">📋 MSDS安全技术说明书</h2>
+                        ${chapters[0].编制单位 || chapters[0].编制依据 ? `
+                        <div class="msds-meta">
+                            ${chapters[0].编制单位 ? `📍 编制单位：${chapters[0].编制单位}` : ''}
+                            ${chapters[0].编制依据 ? ` | 📄 编制依据：${chapters[0].编制依据}` : ''}
+                            ${chapters[0].编制日期 ? ` | 📅 编制日期：${chapters[0].编制日期}` : ''}
+                        </div>
+                        ` : ''}
+                        
+                        <div class="chapters-list">
+                `;
+
+                chapters.forEach(chapter => {
+                    // 根据章节序号进行格式化
+                    const hasCustomFormat = chapter.章节序号 >= 1 && chapter.章节序号 <= 16;
+                    let formattedContent = formatMSDSText(chapter.内容, chapter.章节序号);
+                    
+                    // 渲染图片（如果有）
+                    let imagesHtml = '';
+                    if (chapter.图片JSON && chapter.图片JSON.length > 0) {
+                        imagesHtml = '<div class="msds-images">';
+                        chapter.图片JSON.forEach(img => {
+                            const imgAlt = img.alt || (img.type === 'ghs' ? 'GHS象形图' : '运输标签');
+                            imagesHtml += `
+                                <div class="msds-image-item">
+                                    <img src="msds_json/${img.url}" alt="${imgAlt}" title="${imgAlt}">
+                                    ${img.alt ? `<p class="msds-image-caption">${img.alt}</p>` : ''}
+                                </div>
+                            `;
+                        });
+                        imagesHtml += '</div>';
+                    }
+                    
+                    // 将图片插入到文本中的特定位置
+                    let finalContent;
+                    if (chapter.章节序号 === 2 && imagesHtml) {
+                        // 第2部分：在"象形图"后面插入图片
+                        finalContent = insertImagesIntoText(formattedContent, imagesHtml, '象形图');
+                    } else if (chapter.章节序号 === 14 && imagesHtml) {
+                        // 第14部分：在"运输标签"后面插入图片
+                        finalContent = insertImagesIntoText(formattedContent, imagesHtml, '运输标签');
+                    } else {
+                        // 其他部分：图片放在最后
+                        finalContent = (hasCustomFormat ? formattedContent : `<div class="chapter-text">${formattedContent}</div>`) + imagesHtml;
+                    }
+                    
+                    html += `
+                        <div class="chapter-item">
+                            <div class="chapter-header" onclick="toggleChapter(this)">
+                                <div class="chapter-title-wrapper">
+                                    <div class="chapter-number">${chapter.章节序号}</div>
+                                    <div class="chapter-title">${chapter.章节标题}</div>
+                                </div>
+                                <div class="chapter-icon">▼</div>
+                            </div>
+                            <div class="chapter-content">
+                                <div class="chapter-body">
+                                    ${finalContent}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('resultsSection').innerHTML = html;
+        }
+
+        function toggleChapter(headerElement) {
+            // 找到父元素 chapter-item
+            const chapterItem = headerElement.closest('.chapter-item');
+            if (chapterItem) {
+                chapterItem.classList.toggle('active');
+            }
+        }
+
+        // 将图片插入到文本中的特定位置
+        function insertImagesIntoText(textContent, imagesHtml, keyword) {
+            // 如果文本中包含关键词，在关键词后插入图片
+            if (textContent.includes(keyword)) {
+                const parts = textContent.split(keyword);
+                if (parts.length > 1) {
+                    // 在关键词后插入图片
+                    return `<div class="chapter-text">${parts[0]}${keyword}</div>${imagesHtml}<div class="chapter-text">${parts.slice(1).join(keyword)}</div>`;
+                }
+            }
+            // 如果找不到关键词，图片放在最后
+            return `<div class="chapter-text">${textContent}</div>${imagesHtml}`;
+        }
+
+        // 格式化MSDS章节文本，让序号和内容在同一行
+        function formatMSDSText(text, chapterNumber = 0) {
+            if (!text) return '暂无数据';
+            
+            // 根据章节序号选择对应的格式化函数
+            let formattedHtml = '';
+            switch(chapterNumber) {
+                case 1:
+                    formattedHtml = formatFirstChapter(text);
+                    break;
+                case 2:
+                    formattedHtml = formatSecondChapter(text);
+                    break;
+                case 3:
+                    formattedHtml = formatThirdChapter(text);
+                    break;
+                case 4:
+                    formattedHtml = formatFourthChapter(text);
+                    break;
+                case 5:
+                    formattedHtml = formatFifthChapter(text);
+                    break;
+                case 6:
+                    formattedHtml = formatSixthChapter(text);
+                    break;
+                case 7:
+                    formattedHtml = formatSeventhChapter(text);
+                    break;
+                case 8:
+                    formattedHtml = formatEighthChapter(text);
+                    break;
+                case 9:
+                    formattedHtml = formatNinthChapter(text);
+                    break;
+                case 10:
+                    formattedHtml = formatTenthChapter(text);
+                    break;
+                case 11:
+                    formattedHtml = formatEleventhChapter(text);
+                    break;
+                case 12:
+                    formattedHtml = formatTwelfthChapter(text);
+                    break;
+                case 13:
+                    formattedHtml = formatThirteenthChapter(text);
+                    break;
+                case 14:
+                    formattedHtml = formatFourteenthChapter(text);
+                    break;
+                case 15:
+                    formattedHtml = formatFifteenthChapter(text);
+                    break;
+                case 16:
+                    formattedHtml = formatSixteenthChapter(text);
+                    break;
+                default:
+                    // 其他章节使用默认格式化
+                    formattedHtml = '';
+            }
+            
+            // 如果有格式化的HTML，应用CAS号高亮
+            if (formattedHtml) {
+                return highlightCASNumbers(formattedHtml);
+            }
+            
+            // 替换 "数字 . 空格" 格式为 "数字. "（去除数字和点之间的空格）
+            text = text.replace(/(\d+)\s+\.\s+/g, '$1. ');
+            
+            // 替换连续多个空行为单个空行
+            text = text.replace(/\n{3,}/g, '\n\n');
+            
+            // 去除行首行尾多余空格
+            text = text.split('\n').map(line => line.trim()).join('\n');
+            
+            // 对于没有特殊格式化的章节，也应用CAS号高亮
+            return highlightCASNumbers(text);
+        }
+
+        // 格式化第一部分：化学品及企业标识
+        function formatFirstChapter(text) {
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            let html = '<div class="chapter-text-formatted">';
+            let currentSection = '';
+            
+            // 定义需要高亮的标签
+            const labels = [
+                '产品中文名称', '产品英文名称', '别名', 'CAS NO.', 'EC NO.', '分子式',
+                '产品的推荐用途', '产品的限制用途',
+                '企业名称', '企业地址', '邮编', '传真', '联系电话', '电子邮件地址', '企业应急电话'
+            ];
+            
+            // 定义段落标题
+            const sections = ['产品标识', '产品推荐和限制用途', '安全数据单提供者信息'];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                
+                // 检查是否是段落标题
+                if (sections.includes(line)) {
+                    currentSection = line;
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    continue;
+                }
+                
+                // 检查是否包含标签
+                let matched = false;
+                for (const label of labels) {
+                    if (line.startsWith(label)) {
+                        const value = line.substring(label.length).trim();
+                        html += `
+                            <div class="msds-field">
+                                <span class="msds-field-label">${label}</span>
+                                <span class="msds-field-value">${value}</span>
+                            </div>
+                        `;
+                        matched = true;
+                        break;
+                    }
+                }
+                
+                // 如果不匹配任何标签，正常显示
+                if (!matched && line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057;">${line}</div>`;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第二部分：危险性概述
+        function formatSecondChapter(text) {
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            let html = '<div class="chapter-text-formatted">';
+            
+            // 定义需要高亮的主标题（红色）
+            const mainTitles = [
+                '紧急情况概述', 'GHS危险性类别', 'GHS标签要素', '危险性说明'
+            ];
+            
+            // 定义GHS标签要素下的蓝色小标题
+            const ghsSubTitles = ['象形图', '信号词'];
+            
+            // 定义防范说明和危害描述的子标题（红色小标题）
+            const subTitles = [
+                '防范说明->预防措施', '防范说明->事故响应', '防范说明->安全储存', 
+                '防范说明->废弃处置', '危害描述->物理和化学危险', '危害描述->健康危害', 
+                '危害描述->环境危害'
+            ];
+            
+            // 定义GHS危险性类别下的毒性类别（作为小标题显示）
+            const toxicityCategories = [
+                '急性经口毒性', '急性经皮肤毒性', '皮肤腐蚀/刺激', '皮肤致敏物',
+                '严重眼损伤/眼刺激', '急性吸入毒性', '特异性靶器官毒性-一次接触：呼吸道刺激',
+                '生殖细胞致突变性', '致癌性', '对水生环境的危害-急性危害'
+            ];
+            
+            // 健康危害的子分类
+            const healthCategories = ['吸入', '食入', '皮肤接触', '眼睛'];
+            
+            let inGhsCategory = false;  // 标记是否在GHS危险性类别段落中
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                
+                // 匹配主标题（红色）
+                if (mainTitles.includes(line)) {
+                    if (line === 'GHS危险性类别') {
+                        inGhsCategory = true;
+                    } else if (line === 'GHS标签要素') {
+                        inGhsCategory = false;
+                    }
+                    html += `<div class="msds-section-title" style="margin-top: 20px;">${line}</div>`;
+                    continue;
+                }
+                
+                // 匹配GHS标签要素下的蓝色小标题
+                if (ghsSubTitles.includes(line)) {
+                    html += `<div class="msds-section-title" style="margin-top: 15px; font-size: 15px; color: #667eea;">${line}</div>`;
+                    continue;
+                }
+                
+                // 匹配防范说明和危害描述的子标题
+                if (subTitles.includes(line)) {
+                    html += `<div class="msds-section-title" style="margin-top: 15px; font-size: 15px;">${line}</div>`;
+                    continue;
+                }
+                
+                // 匹配健康危害子分类
+                if (healthCategories.includes(line)) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; display: block;">${line}</div>`;
+                    continue;
+                }
+                
+                // 在GHS危险性类别段落中，检查是否是毒性类别小标题
+                if (inGhsCategory) {
+                    // 检查是否匹配任何毒性类别
+                    let matchedCategory = null;
+                    for (const category of toxicityCategories) {
+                        if (line.startsWith(category)) {
+                            matchedCategory = category;
+                            break;
+                        }
+                    }
+                    
+                    if (matchedCategory) {
+                        // 如果这一行只包含类别名称（没有"类别 X"），则作为小标题
+                        if (line === matchedCategory) {
+                            html += `<div class="msds-section-title" style="margin-top: 12px; font-size: 14px; color: #667eea;">${line}</div>`;
+                            continue;
+                        } else if (line.includes('类别')) {
+                            // 如果这一行包含"类别 X"，则分开显示
+                            const parts = line.split(/\s+类别\s+/);
+                            if (parts.length === 2) {
+                                html += `<div style="margin-bottom: 8px; margin-top: 8px;"><div class="msds-section-title" style="font-size: 14px; color: #667eea; margin: 0; line-height: 1.5;">${parts[0]}</div><div style="color: #495057; margin-top: 4px; padding-left: 15px; line-height: 1.5;">类别 ${parts[1]}</div></div>`;
+                                continue;
+                            }
+                        }
+                    }
+                }
+                
+                // 匹配H开头的危险性说明编号（蓝字小标题）
+                if (/^H\d+/.test(line)) {
+                    const match = line.match(/^(H\d+)\s*(.*)$/);
+                    if (match) {
+                        let code = match[1];
+                        let description = match[2];
+                        
+                        // 如果当前行没有说明文字，尝试从下一行获取（确保下一行不是H/P编号）
+                        if (!description && i + 1 < lines.length) {
+                            const nextLine = lines[i + 1];
+                            // 只有下一行不是H或P编号时，才作为说明文字
+                            if (!/^[HP]\d+/.test(nextLine)) {
+                                description = nextLine;
+                                i++; // 跳过下一行
+                            }
+                        }
+                        
+                        // 只有存在说明文字时才输出，避免空行
+                        if (description) {
+                            html += `<div style="margin-bottom: 8px; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.5;"><span style="color: #667eea; font-weight: 600; margin-right: 8px;">${code}</span><span style="color: #495057; word-wrap: break-word; overflow-wrap: break-word;">${description}</span></div>`;
+                        }
+                        continue;
+                    }
+                }
+                
+                // 匹配P开头的防范说明编号（蓝字小标题，支持 P301+P330+P331 格式）
+                if (/^P\d+/.test(line)) {
+                    let code = line.trim();
+                    let description = '';
+                    let nextIndex = i + 1;
+                    
+                    // 如果当前行以+结尾，继续读取下一行组合编号（如 P301+ 换行 P310）
+                    while (code.endsWith('+') && nextIndex < lines.length) {
+                        const nextLine = lines[nextIndex].trim();
+                        // 检查下一行是否是纯数字或P+数字（如 310 或 P310），且不包含其他文字
+                        if (/^P?\d+$/.test(nextLine) || /^P?\d+\+$/.test(nextLine)) {
+                            // 组合编号（去掉可能的P前缀，因为已经有了）
+                            const numPart = nextLine.replace(/^P/, '');
+                            code += numPart;
+                            nextIndex++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // 读取说明文字
+                    if (nextIndex < lines.length) {
+                        // 检查编号是否已经包含文字（同行格式）
+                        const textMatch = code.match(/^(P[\d+]+)\s+(.+)$/);
+                        if (textMatch) {
+                            code = textMatch[1];
+                            description = textMatch[2];
+                        } else {
+                            // 编号后面没有文字，从nextIndex行读取（确保不是另一个编号）
+                            const descLine = lines[nextIndex];
+                            if (!/^[HP]\d+/.test(descLine) && !/^\d+\.\s/.test(descLine)) {
+                                description = descLine;
+                                nextIndex++;
+                            }
+                        }
+                    }
+                    
+                    // 跳过所有已处理的行
+                    i = nextIndex - 1;
+                    
+                    // 只有存在说明文字时才输出，避免空行
+                    if (description) {
+                        html += `<div style="margin-bottom: 8px; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.5;"><span style="color: #667eea; font-weight: 600; margin-right: 8px;">${code}</span><span style="color: #495057; word-wrap: break-word; overflow-wrap: break-word;">${description}</span></div>`;
+                    }
+                    continue;
+                }
+                
+                // 匹配数字开头的列表项
+                if (/^\d+\.\s/.test(line)) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; padding-left: 10px;">${line}</div>`;
+                    continue;
+                }
+                
+                // 过滤掉纯数字行和P+数字行（这些是P编号的组合部分，不应该单独显示）
+                if (/^P?\d+\+?$/.test(line)) {
+                    continue;
+                }
+                
+                // 其他普通文本（排除已经处理的H/P编号和纯数字）
+                if (line && !/^[HP]\d+/.test(line)) {
+                    html += `<div style="margin-bottom: 8px; color: #495057;">${line}</div>`;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第三部分：成分/组成信息
+        function formatThirdChapter(text) {
+            /**
+             * 格式化第三章节：成分/组成信息
+             * 
+             * 原始格式示例（多行）：
+             * 甲醛
+             * Cas No.
+             * 50-00-0
+             * EC No.
+             * 200-001-8
+             * 含量范围（质量分数，%）
+             * >= 25
+             * 
+             * 目标格式：
+             * 【大标题】甲醛
+             * 【小标题】Cas No.: 50-00-0
+             * 【小标题】EC No.: 200-001-8
+             * 【小标题】含量范围（质量分数，%）: >= 25
+             */
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                // 检查当前行是否是CAS/EC/含量等标签
+                const isCASLabel = /^(Cas\s*No\.|CAS\s*No\.|CAS号|CAS)\.?$/i.test(line);
+                const isECLabel = /^(EC\s*No\.|EINECS\s*No\.|EC号|EINECS)\.?$/i.test(line);
+                const isContentLabel = /^(含量范围|含量|浓度|质量分数)/i.test(line);
+                
+                if (isCASLabel && i + 1 < lines.length) {
+                    // CAS标签，下一行是值（样式与第一、二部分一致）
+                    const value = lines[i + 1];
+                    html += `<div class="msds-field"><div class="msds-field-label">${line}</div><div class="msds-field-value">${value}</div></div>`;
+                    i += 2;  // 跳过标签和值两行
+                } else if (isECLabel && i + 1 < lines.length) {
+                    // EC标签，下一行是值（样式与第一、二部分一致）
+                    const value = lines[i + 1];
+                    html += `<div class="msds-field"><div class="msds-field-label">${line}</div><div class="msds-field-value">${value}</div></div>`;
+                    i += 2;
+                } else if (isContentLabel && i + 1 < lines.length) {
+                    // 含量标签，下一行是值（样式与第一、二部分一致）
+                    const value = lines[i + 1];
+                    html += `<div class="msds-field"><div class="msds-field-label">${line}</div><div class="msds-field-value">${value}</div></div>`;
+                    i += 2;
+                } else {
+                    // 其他行：可能是化学品名称（第一行）或普通内容
+                    if (i === 0) {
+                        // 第一行作为大标题（化学品名称）
+                        html += `<div class="msds-section-title" style="font-size: 18px; color: #2d3748; font-weight: 700; margin-bottom: 15px; margin-top: 0;">${line}</div>`;
+                    } else {
+                        // 其他普通内容
+                        html += `<div style="margin-bottom: 8px; color: #495057; padding-left: 15px;">${line}</div>`;
+                    }
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第四部分：急救措施
+        function formatFourthChapter(text) {
+            /**
+             * 格式化第四章节：急救措施
+             * 
+             * 识别模式：
+             * 1. 主标题：如"急救措施描述"（大标题样式）
+             * 2. 小标题：如"一般性建议"、"眼睛接触"、"皮肤接触"等（蓝色加粗）
+             * 3. 编号列表："1. xxx"、"2. xxx"（保持缩进）
+             * 4. 普通文本
+             * 
+             * 特殊处理：原始数据中序号可能分行，如：
+             * 1
+             * .
+             * 内容文本
+             */
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            // 定义主标题关键词（较大的分类）
+            const mainTitles = [
+                '急救措施描述',
+                '对保护施救者的忠告',
+                '对医生的特别提示'
+            ];
+            
+            // 定义小标题关键词（更具体的子类）
+            const subTitles = [
+                '一般性建议',
+                '一般建议',
+                '眼睛接触',
+                '皮肤接触',
+                '食入',
+                '吸入',
+                '急救人员的防护',
+                '急救人员防护'
+            ];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                // 检查是否是主标题
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                // 检查是否是小标题
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                // 检查是否是分行的序号（纯数字）
+                else if (/^\d+$/.test(line) && i + 1 < lines.length && lines[i + 1] === '.') {
+                    // 合并序号："1" + "." + "内容"
+                    const number = line;
+                    let content = '';
+                    
+                    // 跳过点号
+                    i += 2;
+                    
+                    // 获取内容（可能是下一行）
+                    if (i < lines.length) {
+                        content = lines[i];
+                        i++;
+                    }
+                    
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${number}. ${content}</div>`;
+                }
+                // 检查是否是已经合并的编号列表（如"1. xxx"）
+                else if (/^\d+\.\s+/.test(line)) {
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                // 普通文本
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第五部分：消防措施
+        function formatFifthChapter(text) {
+            /**
+             * 格式化第五章节：消防措施
+             * 
+             * 识别模式：
+             * 1. 主标题：如"灭火介质"、"灭火注意事项及防护措施"等（紫色加粗）
+             * 2. 小标题：如"适合的灭火介质"、"不适合的灭火介质"等（蓝色加粗）
+             * 3. 编号列表："1. xxx"、"2. xxx"（保持缩进）
+             * 4. 普通文本
+             * 
+             * 特殊处理：序号可能分行（如"1" "." "内容"在三行）
+             */
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            // 定义主标题关键词
+            const mainTitles = [
+                '灭火介质',
+                '源于此物质或混合物的特别危害',
+                '灭火注意事项及防护措施'
+            ];
+            
+            // 定义小标题关键词
+            const subTitles = [
+                '适合的灭火介质',
+                '适用的灭火介质',
+                '不适合的灭火介质',
+                '不适用的灭火介质',
+                '特别危害'
+            ];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                // 检查是否是主标题
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                // 检查是否是小标题
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                // 检查是否是分行的序号（纯数字）
+                else if (/^\d+$/.test(line) && i + 1 < lines.length && lines[i + 1] === '.') {
+                    // 合并序号："1" + "." + "内容"
+                    const number = line;
+                    let content = '';
+                    
+                    // 跳过点号
+                    i += 2;
+                    
+                    // 获取内容
+                    if (i < lines.length) {
+                        content = lines[i];
+                        i++;
+                    }
+                    
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${number}. ${content}</div>`;
+                }
+                // 检查是否是已经合并的编号列表
+                else if (/^\d+\.\s+/.test(line)) {
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                // 普通文本
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第六部分：泄漏应急处理
+        function formatSixthChapter(text) {
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '作业人员防护措施，防护设备和紧急处理程序',
+                '作业人员防护措施、防护设备和紧急处理程序',
+                '环境保护措施',
+                '泄漏化学品的收容、清除方法及所使用的处置材料',
+                '泄漏化学品的收容清除方法及所使用的处置材料'
+            ];
+            
+            const subTitles = [];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (/^\d+$/.test(line) && i + 1 < lines.length && lines[i + 1] === '.') {
+                    const number = line;
+                    i += 2;
+                    const content = i < lines.length ? lines[i] : '';
+                    i++;
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${number}. ${content}</div>`;
+                }
+                else if (/^\d+\.\s+/.test(line)) {
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第七部分：操作处置与储存
+        function formatSeventhChapter(text) {
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '操作注意事项',
+                '储存注意事项',
+                '安全操作注意事项',
+                '安全储存注意事项'
+            ];
+            
+            const subTitles = [];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (/^\d+$/.test(line) && i + 1 < lines.length && lines[i + 1] === '.') {
+                    const number = line;
+                    i += 2;
+                    const content = i < lines.length ? lines[i] : '';
+                    i++;
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${number}. ${content}</div>`;
+                }
+                else if (/^\d+\.\s+/.test(line)) {
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第八部分：接触控制/个体防护
+        function formatEighthChapter(text) {
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '控制参数->职业接触限值',
+                '控制参数->生物限值',
+                '控制参数->监测方法',
+                '工程控制',
+                '个人防护装备'
+            ];
+            
+            const subTitles = [
+                '眼睛防护',
+                '手部防护',
+                '呼吸系统防护',
+                '皮肤和身体防护',
+                '职业接触限值',
+                '生物限值',
+                '监测方法'
+            ];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.includes(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (/^\d+$/.test(line) && i + 1 < lines.length && lines[i + 1] === '.') {
+                    const number = line;
+                    i += 2;
+                    const content = i < lines.length ? lines[i] : '';
+                    i++;
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${number}. ${content}</div>`;
+                }
+                else if (/^\d+\.\s+/.test(line)) {
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第九部分：理化特性
+        function formatNinthChapter(text) {
+            /**
+             * 格式化第九章节：理化特性
+             * 
+             * 特殊处理：
+             * 1. 属性名可能分行（如 "气味" + "临界值" = "气味临界值"）
+             * 2. 单位可能在下一行（如 "熔点/凝固点" + "(℃)"）
+             * 3. 值在单位之后的下一行
+             */
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            // 定义完整的属性标签（用于匹配完整标题）
+            const completeLabels = [
+                '外观与性状', '气味临界值', 'pH值', '熔点/凝固点', 
+                '初沸点和沸程', '闪点', '蒸发速率', '易燃性',
+                '爆炸上限 /下限', '爆炸上限/下限', '蒸气压', '蒸气密度', 
+                '相对密度', '溶解性', '辛醇 /水分配系数', '辛醇/水分配系数',
+                '自燃温度', '分解温度', '黏度', '粘度'
+            ];
+            
+            // 定义可能需要合并的属性片段
+            const fragmentPairs = {
+                '气味': ['临界值'],
+                'pH': ['值'],
+                '爆炸上限': ['/下限[%(v/v)]', ' /下限[%(v/v)]'],
+                '辛醇': ['/水分配系数', ' /水分配系数']
+            };
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                let label = line;
+                let unit = '';
+                let value = '';
+                
+                // 检查是否是属性名的第一部分（需要和下一行合并）
+                let needsMerge = false;
+                if (fragmentPairs[line] && i + 1 < lines.length) {
+                    const nextLine = lines[i + 1];
+                    for (const fragment of fragmentPairs[line]) {
+                        if (nextLine === fragment || nextLine.startsWith(fragment)) {
+                            label = line + nextLine;
+                            i++; // 跳过下一行
+                            needsMerge = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // 检查下一行是否是单位（括号包裹）
+                if (i + 1 < lines.length && /^[\(（].*[\)）]$/.test(lines[i + 1])) {
+                    unit = lines[i + 1];
+                    i++; // 跳过单位行
+                }
+                
+                // 检查下一行是否是值
+                if (i + 1 < lines.length) {
+                    const nextLine = lines[i + 1];
+                    // 判断下一行是否是新的属性名（而不是值）
+                    const isNewProperty = completeLabels.some(l => nextLine === l || nextLine.startsWith(l)) ||
+                                         Object.keys(fragmentPairs).includes(nextLine);
+                    
+                    if (!isNewProperty) {
+                        value = nextLine;
+                        i++; // 跳过值行
+                    }
+                }
+                
+                // 组合完整的标签（标签 + 单位）
+                const fullLabel = unit ? `${label}${unit}` : label;
+                
+                // 输出格式化的字段
+                if (value) {
+                    html += `<div class="msds-field"><div class="msds-field-label">${fullLabel}</div><div class="msds-field-value">${value}</div></div>`;
+                } else {
+                    // 如果没有值，可能是单行格式（标签和值在同一行）
+                    let matched = false;
+                    for (const checkLabel of completeLabels) {
+                        if (line.startsWith(checkLabel)) {
+                            const extractedValue = line.substring(checkLabel.length).trim();
+                            if (extractedValue) {
+                                html += `<div class="msds-field"><div class="msds-field-label">${checkLabel}</div><div class="msds-field-value">${extractedValue}</div></div>`;
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!matched && !needsMerge && line && !unit) {
+                        // 其他普通文本
+                        html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    }
+                }
+                
+                i++;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第十部分：稳定性和反应性
+        function formatTenthChapter(text) {
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '稳定性和反应性'
+            ];
+            
+            const subTitles = [
+                '反应性',
+                '化学稳定性',
+                '危险反应的可能性',
+                '危险反应可能性',
+                '避免接触的条件',
+                '应避免的条件',
+                '禁配物',
+                '不相容的物质',
+                '危险的分解产物',
+                '分解产物'
+            ];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (/^\d+$/.test(line) && i + 1 < lines.length && lines[i + 1] === '.') {
+                    const number = line;
+                    i += 2;
+                    const content = i < lines.length ? lines[i] : '';
+                    i++;
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${number}. ${content}</div>`;
+                }
+                else if (/^\d+\.\s+/.test(line)) {
+                    html += `<div style="margin-bottom: 6px; padding-left: 15px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第十一部分：毒理学信息
+        function formatEleventhChapter(text) {
+            /**
+             * 特殊处理：LD/LC数据可能分行
+             * LD
+             * 50
+             * (经口)
+             * 7060mg/kg(大鼠)
+             * 
+             * 需要合并为：LD50(经口) - 蓝色小标题，值单独一行
+             */
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '急性毒性',
+                '致癌性',
+                '其他信息'
+            ];
+            
+            const subTitles = [
+                '组分',
+                '皮肤腐蚀/刺激',
+                '皮肤腐蚀刺激',
+                '严重眼损伤/刺激',
+                '严重眼损伤刺激',
+                '皮肤致敏',
+                '呼吸致敏',
+                '生殖毒性',
+                '特异性靶器官系统毒性-单次接触',
+                '特异性靶器官系统毒性-反复接触',
+                '吸入危害',
+                '生殖细胞致突变性',
+                '生殖毒性附加危害',
+                'IARC',
+                'NTP'
+            ];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                // 检查是否是LD/LC开头（分行格式）
+                else if ((line === 'LD' || line === 'LC') && i + 1 < lines.length) {
+                    let label = line;
+                    
+                    // 读取数字部分（如 50）
+                    if (lines[i + 1].match(/^\d+$/)) {
+                        label += lines[i + 1];
+                        i++;
+                    }
+                    
+                    // 读取类型部分（如 (经口)、(经皮)、(吸入)）
+                    if (i + 1 < lines.length && /^[\(（].*[\)）]$/.test(lines[i + 1])) {
+                        label += lines[i + 1];
+                        i++;
+                    }
+                    
+                    // 读取值
+                    let value = '';
+                    if (i + 1 < lines.length) {
+                        const nextLine = lines[i + 1];
+                        // 判断下一行是否是新的标题
+                        const isNewTitle = mainTitles.some(t => nextLine === t || nextLine.startsWith(t)) ||
+                                          subTitles.some(t => nextLine === t || nextLine.startsWith(t)) ||
+                                          nextLine === 'LD' || nextLine === 'LC';
+                        
+                        if (!isNewTitle) {
+                            value = nextLine;
+                            i++;
+                        }
+                    }
+                    
+                    // 输出为字段格式
+                    html += `<div class="msds-field"><div class="msds-field-label">${label}</div><div class="msds-field-value">${value}</div></div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第十二部分：生态学信息
+        function formatTwelfthChapter(text) {
+            /**
+             * 特殊处理：LC/EC/ErC数据可能分行
+             * ErC
+             * 50
+             * ：12.5mg/L (72h)(藻类)
+             * 
+             * 需要合并为：ErC50：12.5mg/L (72h)(藻类) - 蓝色小标题
+             */
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '急性水生毒性',
+                '慢性水生毒性',
+                '其他信息'
+            ];
+            
+            const subTitles = [
+                '鱼类',
+                '甲壳纲动物',
+                '藻类/水生植物',
+                '持久性和降解性',
+                '生物富集或生物积累性',
+                '土壤中的迁移性',
+                'PBT和vPvB的结果评价'
+            ];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                // 检查是否是LC/EC/ErC开头（分行格式）
+                else if ((line === 'LC' || line === 'EC' || line === 'ErC') && i + 1 < lines.length) {
+                    let label = line;
+                    
+                    // 读取数字部分（如 50）
+                    if (lines[i + 1].match(/^\d+$/)) {
+                        label += lines[i + 1];
+                        i++;
+                    }
+                    
+                    // 读取冒号和值
+                    let value = '';
+                    if (i + 1 < lines.length) {
+                        const nextLine = lines[i + 1];
+                        
+                        // 判断下一行是否是新的标题
+                        const isNewTitle = mainTitles.some(t => nextLine === t || nextLine.startsWith(t)) ||
+                                          subTitles.some(t => nextLine === t || nextLine.startsWith(t)) ||
+                                          nextLine === 'LC' || nextLine === 'EC' || nextLine === 'ErC';
+                        
+                        if (!isNewTitle) {
+                            // 检查是否以冒号开头（如"：12.5mg/L"）
+                            if (nextLine.startsWith('：') || nextLine.startsWith(':')) {
+                                value = nextLine.substring(1).trim(); // 去掉冒号
+                                label += '：'; // 冒号加到标签上
+                            } else {
+                                value = nextLine;
+                            }
+                            i++;
+                        }
+                    }
+                    
+                    // 输出为一行，标签和值在同一行
+                    if (value) {
+                        html += `<div style="margin-bottom: 8px; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.5;"><span style="color: #667eea; font-weight: 600; margin-right: 8px;">${label}</span><span style="color: #495057;">${value}</span></div>`;
+                    } else {
+                        html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${label}</div>`;
+                    }
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第十三部分：废弃处置
+        function formatThirteenthChapter(text) {
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '废弃处置'
+            ];
+            
+            const subTitles = [
+                '废弃化学品',
+                '污染包装物',
+                '废弃注意事项'
+            ];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第十四部分：运输信息
+        function formatFourteenthChapter(text) {
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '标签和标记',
+                '运输信息',
+                '其他信息'
+            ];
+            
+            const subTitles = [
+                '运输标签',
+                '海洋污染物',
+                '联合国危险货物编号',
+                '联合国正确运输名称',
+                '运输主要危险类别',
+                '运输次要危险类别',
+                '包装类别',
+                '海洋污染物(是/否)',
+                '包装方法',
+                '运输注意事项'
+            ];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第十五部分：法规信息
+        function formatFifteenthChapter(text) {
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '国际化学品名录',
+                '中国化学品管理名录'
+            ];
+            
+            const subTitles = [
+                '欧洲现有化学物质名录',
+                'EINECS',
+                '美国 TSCA化学物质名录',
+                'TSCA',
+                '加拿大国内化学物质名录',
+                'DSL',
+                '中国现有化学物质名录',
+                'IECSC',
+                '新西兰现有暂用的化学物质名录',
+                'NZIoC',
+                '菲律宾化学品和化学物质名录',
+                'PICCS',
+                '韩国现有化学物质名录',
+                'KECI',
+                '澳大利亚现有化学品物质名录',
+                'AIIC',
+                '《危险化学品目录',
+                '《重点环境管理危险化学品目录》',
+                '《中国严格限制进出口的有毒化学品目录》',
+                '《药用类麻醉药品和精神药品目录》',
+                '《重点监管的危险化学品名录',
+                '《中国进出口受控消耗臭氧层物质名录',
+                '《易制爆危险化学品名录',
+                '《高毒物品目录》'
+            ];
+            
+            // "列入"和"未列入"是正常值，不应该作为标题
+            const normalValues = ['列入', '未列入'];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                // 跳过"列入"和"未列入"作为标题的判断
+                if (normalValues.includes(line)) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.includes(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 格式化第十六部分：其他信息
+        function formatSixteenthChapter(text) {
+            let html = '<div class="chapter-text-formatted">';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            const mainTitles = [
+                '修改说明',
+                '免责声明',
+                '参考文献',
+                '编制说明'
+            ];
+            
+            const subTitles = [];
+            
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                if (mainTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-section-title">${line}</div>`;
+                    i++;
+                }
+                else if (subTitles.some(title => line === title || line.startsWith(title))) {
+                    html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
+                    i++;
+                }
+                else if (line) {
+                    html += `<div style="margin-bottom: 8px; color: #495057; line-height: 1.6;">${line}</div>`;
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 切换导入界面
+        function toggleImport() {
+            const section = document.getElementById('importSection');
+            section.classList.toggle('show');
+        }
+
+        // 处理文件选择
+        let selectedFile = null;
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (!file.name.endsWith('.json')) {
+                    showNotification('只支持JSON文件', 'error');
+                    return;
+                }
+                
+                selectedFile = file;
+                document.getElementById('selectedFile').textContent = `已选择: ${file.name}`;
+                document.getElementById('selectedFile').classList.add('show');
+                document.getElementById('importBtn').classList.add('show');
+            }
+        }
+
+        // 处理拖拽上传
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.json')) {
+                    selectedFile = file;
+                    document.getElementById('selectedFile').textContent = `已选择: ${file.name}`;
+                    document.getElementById('selectedFile').classList.add('show');
+                    document.getElementById('importBtn').classList.add('show');
+                } else {
+                    showNotification('只支持JSON文件', 'error');
+                }
+            }
+        });
+
+        // 导入数据
+        async function importData() {
+            if (!selectedFile) {
+                showNotification('请先选择文件', 'error');
+                return;
+            }
+
+            const importBtn = document.getElementById('importBtn');
+            const originalText = importBtn.textContent;
+            importBtn.textContent = '⏳ 导入中...';
+            importBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const response = await fetch('/api/import', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showNotification(`✅ ${data.message}`, 'success');
+                    
+                    // 清空选择
+                    selectedFile = null;
+                    document.getElementById('fileInput').value = '';
+                    document.getElementById('selectedFile').classList.remove('show');
+                    document.getElementById('importBtn').classList.remove('show');
+                    
+                    // 3秒后自动搜索导入的化学品
+                    setTimeout(() => {
+                        document.getElementById('searchInput').value = data.data.化学品名称;
+                        search();
+                        toggleImport();
+                    }, 2000);
+                } else {
+                    showNotification(`❌ ${data.error || '导入失败'}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`❌ 网络错误: ${error.message}`, 'error');
+            } finally {
+                importBtn.textContent = originalText;
+                importBtn.disabled = false;
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // 页面加载时聚焦搜索框
+        window.onload = function() {
+            document.getElementById('searchInput').focus();
+        };
+    </script>
+</body>
+</html>
+

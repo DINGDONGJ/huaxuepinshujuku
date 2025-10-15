@@ -3,7 +3,7 @@
 专业化查询界面
 """
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import pymysql
 import json
 from decimal import Decimal
@@ -13,9 +13,11 @@ import os
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 限制上传文件大小为16MB
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['PDF_FOLDER'] = 'pdf'
 
-# 确保上传文件夹存在
+# 确保文件夹存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['PDF_FOLDER'], exist_ok=True)
 
 # 数据库配置
 DB_CONFIG = {
@@ -394,6 +396,14 @@ def delete_chemical():
             
     except Exception as e:
         return jsonify({'error': f'删除失败: {str(e)}'}), 500
+
+@app.route('/pdf/<path:filename>')
+def serve_pdf(filename):
+    """提供PDF文件访问"""
+    try:
+        return send_from_directory(app.config['PDF_FOLDER'], filename)
+    except FileNotFoundError:
+        return jsonify({'error': 'PDF文件未找到'}), 404
 
 if __name__ == '__main__':
     print("=" * 60)

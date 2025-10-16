@@ -1186,10 +1186,78 @@
 
         .pdf-sidebar-content {
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 10px;
             border-radius: 0 0 12px 12px; /* 底部圆角 */
-            max-height: 600px; /* 最大显示高度 */
-            flex-shrink: 1; /* 允许收缩 */
+            flex: 1; /* 占据剩余空间 */
+            min-height: 0; /* 允许flex收缩 */
+        }
+
+        /* 搜索结果分组标题 */
+        .search-group-title {
+            padding: 8px 10px;
+            margin: 10px 0 6px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+        
+        .search-group-title:hover {
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .search-group-title:first-child {
+            margin-top: 0;
+        }
+        
+        .group-icon {
+            font-size: 14px;
+        }
+        
+        .group-name {
+            flex: 1;
+        }
+        
+        .group-count {
+            font-size: 11px;
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        .group-toggle {
+            font-size: 12px;
+            transition: transform 0.3s ease;
+            margin-left: 4px;
+        }
+        
+        .search-group-title.collapsed .group-toggle {
+            transform: rotate(-90deg);
+        }
+        
+        /* 分组内容容器 */
+        .search-group-content {
+            max-height: none; /* 不限制高度，允许完全展开 */
+            overflow: visible;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+        
+        .search-group-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
         }
 
         .search-result-item {
@@ -1361,14 +1429,83 @@
                 max-height: 300px; /* 移动端限制更低的高度 */
             }
         }
+
+        /* Font Awesome 图标样式优化 */
+        .fas, .far, .fab {
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .header h1 .fas {
+            margin-right: 12px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .search-btn .fas,
+        .list-btn .fas {
+            margin-right: 8px;
+        }
+
+        .pdf-control-btn .fas {
+            font-size: 14px;
+        }
+
+        .search-hint .fas {
+            color: #667eea;
+            margin-right: 8px;
+        }
+
+        .import-toggle-btn .fas {
+            margin-right: 8px;
+        }
+
+        .upload-icon .fas {
+            font-size: 48px;
+            color: #667eea;
+        }
+
+        .confirm-dialog-icon .fas {
+            font-size: 48px;
+            color: #f59e0b;
+        }
+
+        .action-btn-icon .fas {
+            font-size: 14px;
+            color: #ef4444;
+            transition: transform 0.2s;
+        }
+
+        .action-btn-icon:hover .fas {
+            transform: scale(1.2);
+        }
+
+        .chemical-info-item .fas {
+            color: #667eea;
+            width: 16px;
+            text-align: center;
+        }
+
+        .sidebar-title .fas {
+            margin-right: 10px;
+        }
+
+        .group-icon .fas {
+            font-size: 16px;
+        }
+
+        .pdf-sidebar-toggle .fas {
+            font-size: 18px;
+        }
     </style>
+    <!-- Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
     <!-- 删除确认对话框 -->
     <div class="confirm-dialog-overlay" id="confirmDialog">
         <div class="confirm-dialog">
-            <div class="confirm-dialog-icon">⚠️</div>
+            <div class="confirm-dialog-icon"><i class="fas fa-exclamation-triangle"></i></div>
             <div class="confirm-dialog-title">确认删除</div>
             <div class="confirm-dialog-message" id="confirmMessage">
                 确定要删除这个化学品吗？此操作不可恢复！
@@ -1386,7 +1523,7 @@
     <!-- 化学品列表侧边栏 -->
     <div class="sidebar" id="chemicalSidebar">
         <div class="sidebar-header">
-            <div class="sidebar-title">📋 化学品列表</div>
+            <div class="sidebar-title"><i class="fas fa-clipboard-list"></i> 化学品列表</div>
             <button class="sidebar-close" onclick="toggleSidebar()">×</button>
         </div>
         
@@ -1405,7 +1542,7 @@
         
         <div class="sidebar-content" id="sidebarContent">
             <div class="loading-spinner">
-                <div>⏳ 加载中...</div>
+                <div><i class="fas fa-spinner fa-spin"></i> 加载中...</div>
             </div>
         </div>
     </div>
@@ -1415,20 +1552,20 @@
         <div class="pdf-viewer-container">
             <div class="pdf-viewer-header">
                 <h3 id="pdfViewerTitle">法规文件</h3>
-                <button class="pdf-close-btn" onclick="closePdfViewer()">✕</button>
+                <button class="pdf-close-btn" onclick="closePdfViewer()"><i class="fas fa-times"></i></button>
             </div>
             <div class="pdf-viewer-controls">
-                <button class="pdf-control-btn" onclick="previousPage()" id="prevBtn">⬅️ 上一页</button>
+                <button class="pdf-control-btn" onclick="previousPage()" id="prevBtn"><i class="fas fa-chevron-left"></i> 上一页</button>
                 <span class="pdf-page-info">
                     第 <span id="currentPage">1</span> / <span id="totalPages">1</span> 页
                 </span>
-                <button class="pdf-control-btn" onclick="nextPage()" id="nextBtn">下一页 ➡️</button>
-                <button class="pdf-control-btn" onclick="zoomOut()">🔍 缩小</button>
-                <button class="pdf-control-btn" onclick="zoomIn()">🔍 放大</button>
+                <button class="pdf-control-btn" onclick="nextPage()" id="nextBtn">下一页 <i class="fas fa-chevron-right"></i></button>
+                <button class="pdf-control-btn" onclick="zoomOut()"><i class="fas fa-search-minus"></i> 缩小</button>
+                <button class="pdf-control-btn" onclick="zoomIn()"><i class="fas fa-search-plus"></i> 放大</button>
             </div>
             <div class="pdf-viewer-content">
                 <div id="pdfPageContainer" class="pdf-page-container">
-                    <canvas id="pdfCanvas"></canvas>
+                <canvas id="pdfCanvas"></canvas>
                     <div id="textLayer" class="textLayer"></div>
                 </div>
             </div>
@@ -1436,7 +1573,7 @@
             <!-- PDF搜索结果侧边栏 - 移到容器外，不受内容滚动影响 -->
             <div class="pdf-sidebar" id="pdfSidebar">
                 <button class="pdf-sidebar-toggle" onclick="togglePdfSidebar()" title="显示/隐藏搜索结果">
-                    📍
+                    <i class="fas fa-list-ul"></i>
                 </button>
                 <div class="pdf-sidebar-header">
                     <span>搜索结果 (<span id="resultCount">0</span>)</span>
@@ -1451,7 +1588,7 @@
 
     <div class="container">
         <div class="header">
-            <h1>🧪 危化品MSDS查询系统</h1>
+            <h1><i class="fas fa-flask"></i> 危化品MSDS查询系统</h1>
             <p>专业化学品安全数据查询平台</p>
         </div>
 
@@ -1464,22 +1601,22 @@
                     placeholder="请输入化学品中文名、英文名、CAS号或别名..."
                     onkeypress="if(event.key === 'Enter') search()"
                 >
-                <button class="search-btn" onclick="search()">🔍 查询</button>
-                <button class="list-btn" onclick="toggleSidebar()">📋 查看列表</button>
+                <button class="search-btn" onclick="search()"><i class="fas fa-search"></i> 查询</button>
+                <button class="list-btn" onclick="toggleSidebar()"><i class="fas fa-list"></i> 查看列表</button>
             </div>
             <div class="search-hint">
-                💡 支持查询：中文名（如：甲醛）、英文名（如：formaldehyde）、CAS号（如：50-00-0）、别名（如：福尔马林）
+                <i class="fas fa-lightbulb"></i> 支持查询：中文名（如：甲醛）、英文名（如：formaldehyde）、CAS号（如：50-00-0）、别名（如：福尔马林）
             </div>
             
             <button class="import-toggle-btn" onclick="toggleImport()">
-                📤 导入MSDS数据
+                <i class="fas fa-upload"></i> 导入MSDS数据
             </button>
             
             <div class="import-section" id="importSection">
-                <h3 style="color: #374151; margin-bottom: 20px; font-size: 18px;">📥 上传JSON文件</h3>
+                <h3 style="color: #374151; margin-bottom: 20px; font-size: 18px;"><i class="fas fa-download"></i> 上传JSON文件</h3>
                 
                 <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                    <div class="upload-icon">📄</div>
+                    <div class="upload-icon"><i class="fas fa-file-code"></i></div>
                     <div class="upload-text">点击选择文件或拖拽到此处</div>
                     <div class="upload-hint">仅支持 .json 格式文件</div>
                 </div>
@@ -1489,7 +1626,7 @@
                 <div class="selected-file" id="selectedFile"></div>
                 
                 <button class="import-btn" id="importBtn" onclick="importData()">
-                    🚀 开始导入
+                    <i class="fas fa-rocket"></i> 开始导入
                 </button>
             </div>
         </div>
@@ -1526,14 +1663,14 @@
                 } else {
                     resultsSection.innerHTML = `
                         <div class="error-message">
-                            ❌ ${data.error || '查询失败，请重试'}
+                            <i class="fas fa-times-circle"></i> ${data.error || '查询失败，请重试'}
                         </div>
                     `;
                 }
             } catch (error) {
                 resultsSection.innerHTML = `
                     <div class="error-message">
-                        ❌ 网络错误: ${error.message}
+                        <i class="fas fa-times-circle"></i> 网络错误: ${error.message}
                     </div>
                 `;
             }
@@ -1567,7 +1704,7 @@
                             <span class="en-name">${basic.英文名 || ''}</span>
                         </div>
                         <button class="delete-btn" onclick="showDeleteConfirm(${basic.编号}, '${basic.中文名.replace(/'/g, "\\'")}', '${basic.CAS号 || ''}', function() { document.getElementById('searchInput').value = ''; });">
-                            🗑️ 删除化学品
+                            <i class="fas fa-trash-alt"></i> 删除化学品
                         </button>
                     </div>
                     
@@ -1595,12 +1732,12 @@
             if (chapters && chapters.length > 0) {
                 html += `
                     <div class="msds-section">
-                        <h2 class="msds-title">📋 MSDS安全技术说明书</h2>
+                        <h2 class="msds-title"><i class="fas fa-clipboard-list"></i> MSDS安全技术说明书</h2>
                         ${chapters[0].编制单位 || chapters[0].编制依据 ? `
                         <div class="msds-meta">
-                            ${chapters[0].编制单位 ? `📍 编制单位：${chapters[0].编制单位}` : ''}
-                            ${chapters[0].编制依据 ? ` | 📄 编制依据：${chapters[0].编制依据}` : ''}
-                            ${chapters[0].编制日期 ? ` | 📅 编制日期：${chapters[0].编制日期}` : ''}
+                            ${chapters[0].编制单位 ? `<i class="fas fa-building"></i> 编制单位：${chapters[0].编制单位}` : ''}
+                            ${chapters[0].编制依据 ? ` | <i class="fas fa-file-alt"></i> 编制依据：${chapters[0].编制依据}` : ''}
+                            ${chapters[0].编制日期 ? ` | <i class="fas fa-calendar-alt"></i> 编制日期：${chapters[0].编制日期}` : ''}
                         </div>
                         ` : ''}
                         
@@ -2929,12 +3066,12 @@
                     let isClickable = false;
                     let pdfFile = null;
                     
-                    // 查找对应的PDF文件
-                    for (const [keyword, pdf] of Object.entries(regulationPdfMap)) {
-                        if (line.includes(keyword)) {
-                            isClickable = true;
-                            pdfFile = pdf;
-                            break;
+                        // 查找对应的PDF文件
+                        for (const [keyword, pdf] of Object.entries(regulationPdfMap)) {
+                            if (line.includes(keyword)) {
+                                isClickable = true;
+                                pdfFile = pdf;
+                                break;
                         }
                     }
                     
@@ -2945,7 +3082,7 @@
                                       style="margin-top: 10px; margin-bottom: 8px; cursor: pointer;" 
                                       onclick="openPdfViewerWithSearch('${pdfFile}', '${escapedLine}')"
                                       title="点击查看PDF文件并自动搜索该化学品（含别名）">
-                                    ${line} 📄
+                                    ${line} <i class="fas fa-file-pdf"></i>
                                 </div>`;
                     } else {
                         // 普通小标题
@@ -3067,8 +3204,8 @@
             }
 
             const importBtn = document.getElementById('importBtn');
-            const originalText = importBtn.textContent;
-            importBtn.textContent = '⏳ 导入中...';
+            const originalText = importBtn.innerHTML;
+            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导入中...';
             importBtn.disabled = true;
 
             try {
@@ -3083,7 +3220,7 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showNotification(`✅ ${data.message}`, 'success');
+                    showNotification(`${data.message}`, 'success');
                     
                     // 清空选择
                     selectedFile = null;
@@ -3103,12 +3240,12 @@
                         toggleImport();
                     }, 2000);
                 } else {
-                    showNotification(`❌ ${data.error || '导入失败'}`, 'error');
+                    showNotification(`${data.error || '导入失败'}`, 'error');
                 }
             } catch (error) {
-                showNotification(`❌ 网络错误: ${error.message}`, 'error');
+                showNotification(`网络错误: ${error.message}`, 'error');
             } finally {
-                importBtn.textContent = originalText;
+                importBtn.innerHTML = originalText;
                 importBtn.disabled = false;
             }
         }
@@ -3127,7 +3264,7 @@
         }
 
         // 显示通知（支持多行堆叠）
-        function showNotification(message, type = 'success') {
+        function showNotification(message, type = 'success', duration = 2000) {
             const container = getNotificationContainer();
             
             const notification = document.createElement('div');
@@ -3137,17 +3274,21 @@
             // 添加到容器顶部
             container.appendChild(notification);
 
-            // 2秒后移除（带动画）
-            setTimeout(() => {
-                notification.classList.add('removing');
+            // 如果duration为0，则不自动移除（用于持久显示）
+            if (duration > 0) {
                 setTimeout(() => {
-                    notification.remove();
-                    // 如果容器为空，也移除容器
-                    if (container.children.length === 0) {
-                        container.remove();
-                    }
-                }, 300); // 等待退出动画完成
-            }, 2000);
+                    notification.classList.add('removing');
+            setTimeout(() => {
+                notification.remove();
+                        // 如果容器为空，也移除容器
+                        if (container.children.length === 0) {
+                            container.remove();
+                        }
+                    }, 300); // 等待退出动画完成
+                }, duration);
+            }
+            
+            return notification; // 返回通知元素，便于手动移除
         }
 
         // 全局变量存储化学品列表
@@ -3182,7 +3323,7 @@
             const statsDiv = document.getElementById('statsText');
             
             try {
-                contentDiv.innerHTML = '<div class="loading-spinner"><div>⏳ 加载中...</div></div>';
+                contentDiv.innerHTML = '<div class="loading-spinner"><div><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';
                 statsDiv.textContent = '加载中...';
                 
                 const response = await fetch('/api/list');
@@ -3203,7 +3344,7 @@
             } catch (error) {
                 contentDiv.innerHTML = `
                     <div class="empty-list">
-                        <div class="empty-list-icon">⚠️</div>
+                        <div class="empty-list-icon"><i class="fas fa-exclamation-triangle"></i></div>
                         <div>加载失败: ${error.message}</div>
                     </div>
                 `;
@@ -3238,22 +3379,22 @@
                             <div class="chemical-name-item">${chem.中文名}</div>
                             <div class="chemical-info">
                                 <div class="chemical-info-item">
-                                    <span>🔢</span>
+                                    <span><i class="fas fa-hashtag"></i></span>
                                     <span>${cas}</span>
                                 </div>
                                 <div class="chemical-info-item">
-                                    <span>🌐</span>
+                                    <span><i class="fas fa-globe"></i></span>
                                     <span>${englishName}</span>
                                 </div>
                                 <div class="chemical-info-item">
-                                    <span>📄</span>
+                                    <span><i class="fas fa-file-alt"></i></span>
                                     <span>${chapterCount} 个章节</span>
                                 </div>
                             </div>
                         </div>
                         <div class="chemical-list-item-actions">
                             <button class="action-btn-icon" onclick="event.stopPropagation(); showDeleteConfirm(${chem.编号}, '${chem.中文名.replace(/'/g, "\\'")}', '${chem.CAS号 || ''}');" title="删除">
-                                🗑️
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -3313,7 +3454,7 @@
             message.innerHTML = `
                 确定要删除化学品 <strong>"${chemicalName}"${casInfo}</strong> 吗？<br>
                 <span style="color: #dc3545; font-size: 14px; margin-top: 10px; display: inline-block;">
-                    ⚠️ 此操作将删除该化学品的所有相关数据（别名、MSDS文档、章节等），且不可恢复！
+                    <i class="fas fa-exclamation-triangle"></i> 此操作将删除该化学品的所有相关数据（别名、MSDS文档、章节等），且不可恢复！
                 </span>
             `;
             
@@ -3372,7 +3513,7 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showNotification(`✅ ${data.message}`, 'success');
+                    showNotification(`${data.message}`, 'success');
                     
                     // 清空结果区域
                     document.getElementById('resultsSection').innerHTML = '';
@@ -3384,11 +3525,11 @@
                     
                     return true;
                 } else {
-                    showNotification(`❌ ${data.error || '删除失败'}`, 'error');
+                    showNotification(`${data.error || '删除失败'}`, 'error');
                     return false;
                 }
             } catch (error) {
-                showNotification(`❌ 网络错误: ${error.message}`, 'error');
+                showNotification(`网络错误: ${error.message}`, 'error');
                 return false;
             }
         }
@@ -3414,41 +3555,53 @@
         let currentScale = 1.5;
         let isRendering = false;
         let currentSearchKeyword = ''; // 当前搜索的关键词，用于翻页时保持高亮
-        let searchResults = []; // 存储所有搜索结果 [{pageNum, context, startIndex}]
+        let searchResults = []; // 存储所有搜索结果 [{pageNum, context, keyword, type}]
+        
+        // PDF文本内容缓存（性能优化：避免重复加载）
+        // 结构：Map<pdfFileName, Map<pageNum, pageText>>
+        let pdfTextCache = new Map();
+        let currentPdfFileName = ''; // 记录当前打开的PDF文件名
         
         // 打开PDF查看器并搜索当前化学品（包括CAS号、名称、别名）
         async function openPdfViewerWithSearch(pdfFileName, title = '法规文件') {
-            // 构建搜索关键词列表：CAS号、中文名、别名
-            const keywords = [];
+            // 构建分组的搜索关键词对象
+            const keywordGroups = {
+                cas: currentChemicalInfo.cas || '',
+                name: currentChemicalInfo.name || '',
+                aliases: []
+            };
             
-            if (currentChemicalInfo.cas) {
-                keywords.push(currentChemicalInfo.cas);
-            }
-            if (currentChemicalInfo.name) {
-                keywords.push(currentChemicalInfo.name);
-            }
             if (currentChemicalInfo.aliases) {
                 // 别名可能是多个，用逗号、分号或顿号分隔
-                const aliases = currentChemicalInfo.aliases.split(/[,，;；、\s]+/).filter(a => a.trim());
-                keywords.push(...aliases);
+                keywordGroups.aliases = currentChemicalInfo.aliases
+                    .split(/[,，;；、\s]+/)
+                    .filter(a => {
+                        const trimmed = a.trim();
+                        // 过滤空字符串和"-"（表示无别名）
+                        return trimmed && trimmed !== '-';
+                    });
             }
             
-            // 显示将要搜索的关键词
-            console.log('搜索关键词：', keywords);
-            
-            // 调用PDF查看器，传入关键词数组
-            await openPdfViewer(pdfFileName, 1, title, keywords);
+            // 调用PDF查看器，传入分组的关键词对象
+            await openPdfViewer(pdfFileName, 1, title, keywordGroups);
         }
         
         // 打开PDF文件（支持自动搜索化学品）
         async function openPdfViewer(pdfFileName, pageNumber = 1, title = '法规文件', searchKeyword = '') {
             try {
-                showNotification('📄 正在加载PDF文件...', 'info');
+                showNotification('正在加载PDF文件...', 'info');
                 
                 const pdfPath = `/pdf/${pdfFileName}`;
                 
-                // 加载PDF
-                const loadingTask = pdfjsLib.getDocument(pdfPath);
+                // 记录当前PDF文件名（用于缓存）
+                currentPdfFileName = pdfFileName;
+                
+                // 加载PDF（配置CMap支持中文）
+                const loadingTask = pdfjsLib.getDocument({
+                    url: pdfPath,
+                    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+                    cMapPacked: true
+                });
                 pdfDoc = await loadingTask.promise;
                 totalPagesCount = pdfDoc.numPages;
                 
@@ -3459,152 +3612,378 @@
                 document.getElementById('pdfViewerTitle').textContent = title;
                 document.getElementById('totalPages').textContent = totalPagesCount;
                 
-                // 如果提供了搜索关键词，尝试搜索并跳转
-                let targetPage = pageNumber;
-                if (searchKeyword) {
-                    // 处理搜索关键词（可能是字符串或数组）
-                    const keywordDisplay = Array.isArray(searchKeyword) 
-                        ? searchKeyword.filter(k => k).join('、') 
-                        : searchKeyword;
-                    
-                    showNotification('🔍 正在搜索：' + keywordDisplay + '...', 'info');
-                    const foundPage = await searchInPdf(searchKeyword);
-                    if (foundPage > 0) {
-                        targetPage = foundPage;
-                        const resultCount = searchResults.length;
-                        showNotification(`✅ 找到 ${resultCount} 处匹配，跳转至第 ${foundPage} 页`, 'success');
-                    } else {
-                        showNotification('⚠️ 未找到匹配项，显示第1页', 'warning');
-                    }
-                }
+                // 始终显示第1页，不自动跳转
+                currentPageNum = 1;
+                await renderPage(currentPageNum);  // 移除了 currentSearchKeyword 参数，不需要高亮
                 
-                // 跳转到目标页
-                currentPageNum = Math.min(Math.max(1, targetPage), totalPagesCount);
-                await renderPage(currentPageNum, currentSearchKeyword);
-                
-                // 显示查看器
+                // 立即显示查看器（优化：不等待搜索完成）
                 document.getElementById('pdfViewerOverlay').classList.add('show');
+                showNotification('PDF加载成功', 'success');
                 
-                if (!searchKeyword) {
-                    showNotification('✅ PDF加载成功', 'success');
+                // 如果提供了搜索关键词，在后台异步执行搜索（不阻塞PDF显示）
+                if (searchKeyword) {
+                    setTimeout(async () => {
+                        await searchInPdf(searchKeyword);
+                    }, 50);  // 减少延迟，更快开始搜索
                 }
                 
             } catch (error) {
                 console.error('PDF加载失败:', error);
-                showNotification('❌ PDF加载失败：' + error.message, 'error');
+                showNotification('PDF加载失败：' + error.message, 'error');
             }
         }
 
-        // 在PDF中搜索关键词（支持单个或多个关键词），返回找到的第一个页码，并收集所有匹配项
+        // 获取页面文本内容（带缓存）
+        async function getPageText(pageNum) {
+            // 检查缓存
+            if (!pdfTextCache.has(currentPdfFileName)) {
+                pdfTextCache.set(currentPdfFileName, new Map());
+            }
+            
+            const pageCache = pdfTextCache.get(currentPdfFileName);
+            
+            // 如果缓存中有，直接返回
+            if (pageCache.has(pageNum)) {
+                return pageCache.get(pageNum);
+            }
+            
+            // 否则，加载页面文本并缓存
+            const page = await pdfDoc.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join('');
+            
+            // 存入缓存
+            pageCache.set(pageNum, pageText);
+            
+            return pageText;
+        }
+        
+        // 搜索单个页面的关键词（辅助函数）
+        // matchType: 'exact' 全字匹配, 'contains' 包含匹配（默认）
+        async function searchPageForKeywords(pageNum, keywordList, keywordType = 'CAS号') {
+            try {
+                // 使用缓存获取页面文本（性能优化）
+                const pageText = await getPageText(pageNum);
+                
+                let foundInThisPage = false;
+                
+                // 对每个关键词进行搜索
+                for (const keywordInfo of keywordList) {
+                    const keyword = keywordInfo.keyword;
+                    const matchType = keywordInfo.matchType || 'contains';
+                    
+                    // 查找所有匹配位置
+                    let startIndex = 0;
+                    while (true) {
+                        const index = pageText.indexOf(keyword, startIndex);
+                        if (index === -1) break;
+                        
+                        // 如果是全字匹配，检查前后字符（严格边界判断）
+                        if (matchType === 'exact') {
+                            const beforeChar = index > 0 ? pageText[index - 1] : '';
+                            const afterChar = index + keyword.length < pageText.length 
+                                ? pageText[index + keyword.length] 
+                                : '';
+                            
+                            // 检查前后是否为汉字、连字符、括号或英文字母
+                            // 汉字：\u4e00-\u9fff（但"特"字除外）
+                            // 连字符：-
+                            // 括号：()[]
+                            // 英文字母：a-zA-Z
+                            // 允许的边界字符："特"
+                            const invalidBefore = beforeChar && beforeChar !== '特' && /[\u4e00-\u9fff\-\(\)\[\]a-zA-Z]/.test(beforeChar);
+                            const invalidAfter = afterChar && afterChar !== '特' && /[\u4e00-\u9fff\-\(\)\[\]a-zA-Z]/.test(afterChar);
+                            
+                            if (invalidBefore || invalidAfter) {
+                                startIndex = index + 1;
+                                continue; // 前后有非法字符，不匹配，跳过
+                            }
+                        }
+                        
+                        foundInThisPage = true;
+                        
+                        // 提取上下文（前后各30个字符）
+                        const contextStart = Math.max(0, index - 30);
+                        const contextEnd = Math.min(pageText.length, index + keyword.length + 30);
+                        let context = pageText.substring(contextStart, contextEnd);
+                        
+                        // 添加省略号
+                        if (contextStart > 0) context = '...' + context;
+                        if (contextEnd < pageText.length) context = context + '...';
+                        
+                        // 保存搜索结果
+                        searchResults.push({
+                            pageNum: pageNum,
+                            context: context,
+                            keyword: keyword,
+                            type: keywordType,  // 标记类型：CAS号、化学品名称、别名
+                            index: index
+                        });
+                        
+                        startIndex = index + keyword.length;
+                    }
+                }
+                
+                return foundInThisPage;
+            } catch (error) {
+                console.error(`搜索第${pageNum}页时出错:`, error);
+                return false;
+            }
+        }
+
+        // 在PDF中搜索关键词（按优先级分组搜索：CAS号 -> 名称 -> 别名）
         async function searchInPdf(keywords) {
             if (!pdfDoc || !keywords) return 0;
-            
-            // 将关键词转换为数组
-            const keywordArray = Array.isArray(keywords) ? keywords : [keywords];
-            // 过滤掉空关键词
-            const validKeywords = keywordArray.filter(k => k && k.trim());
-            
-            if (validKeywords.length === 0) return 0;
             
             searchResults = []; // 清空之前的搜索结果
             let firstPage = 0;
             
-            try {
-                // 遍历所有页面查找关键词
-                for (let pageNum = 1; pageNum <= totalPagesCount; pageNum++) {
-                    const page = await pdfDoc.getPage(pageNum);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join('');
-                    
-                    // 对每个关键词进行搜索
-                    for (const keyword of validKeywords) {
-                        // 查找所有匹配位置
-                        let startIndex = 0;
-                        while (true) {
-                            const index = pageText.indexOf(keyword, startIndex);
-                            if (index === -1) break;
-                            
-                            // 记录第一个匹配的页码
-                            if (firstPage === 0) {
-                                firstPage = pageNum;
-                            }
-                            
-                            // 提取上下文（前后各30个字符）
-                            const contextStart = Math.max(0, index - 30);
-                            const contextEnd = Math.min(pageText.length, index + keyword.length + 30);
-                            let context = pageText.substring(contextStart, contextEnd);
-                            
-                            // 添加省略号
-                            if (contextStart > 0) context = '...' + context;
-                            if (contextEnd < pageText.length) context = context + '...';
-                            
-                            // 保存搜索结果
-                            searchResults.push({
-                                pageNum: pageNum,
-                                context: context,
-                                keyword: keyword,
-                                index: index
+            // 配置参数
+            const QUICK_SEARCH_PAGES = 200;  // 快速搜索前200页
+            // 不限制搜索结果数量，搜索全部匹配项
+            
+            // 构建搜索队列：按优先级排列（CAS号 -> 名称 -> 别名）
+            const searchQueue = [];
+            
+            if (typeof keywords === 'object' && !Array.isArray(keywords)) {
+                // 新格式：{cas, name, aliases}
+                // 1. CAS号（包含匹配即可）
+                if (keywords.cas && keywords.cas.trim()) {
+                    searchQueue.push({
+                        keyword: keywords.cas.trim(),
+                        matchType: 'contains',
+                        type: 'CAS号'
+                    });
+                }
+                
+                // 2. 化学品名称（全字匹配）
+                if (keywords.name && keywords.name.trim()) {
+                    searchQueue.push({
+                        keyword: keywords.name.trim(),
+                        matchType: 'exact',
+                        type: '化学品名称'
+                    });
+                }
+                
+                // 3. 别名（全字匹配）
+                if (keywords.aliases && keywords.aliases.length > 0) {
+                    keywords.aliases.forEach(alias => {
+                        if (alias && alias.trim()) {
+                            searchQueue.push({
+                                keyword: alias.trim(),
+                                matchType: 'exact',
+                                type: '别名'
                             });
-                            
-                            startIndex = index + keyword.length;
+                        }
+                    });
+                }
+            } else {
+                // 兼容旧格式：字符串或数组
+                const keywordArray = Array.isArray(keywords) ? keywords : [keywords];
+                keywordArray.filter(k => k && k.trim()).forEach(k => {
+                    searchQueue.push({
+                        keyword: k.trim(),
+                        matchType: 'contains',
+                        type: '关键词'
+                    });
+                });
+            }
+            
+            if (searchQueue.length === 0) return 0;
+            
+            try {
+                // 检查是否已有缓存
+                const hasCache = pdfTextCache.has(currentPdfFileName) && 
+                                 pdfTextCache.get(currentPdfFileName).size > 0;
+                
+                // 显示搜索中的持久通知
+                const cacheInfo = hasCache ? '使用缓存加速' : '首次加载需缓存文本';
+                const searchingNotif = showNotification(
+                    `正在搜索 ${totalPagesCount} 页PDF文档... ${cacheInfo}`, 
+                    'info', 
+                    0
+                );
+                
+                // 批量并行搜索配置
+                const BATCH_SIZE = hasCache ? 100 : 50; // 有缓存时可以更大批次
+                let searchedPages = 0;
+                
+                // 按优先级搜索
+                for (const group of ['CAS号', '化学品名称', '别名', '关键词']) {
+                    const groupKeywords = searchQueue.filter(k => k.type === group);
+                    if (groupKeywords.length === 0) continue;
+                    
+                    // 分批并行处理
+                    for (let startPage = 1; startPage <= totalPagesCount; startPage += BATCH_SIZE) {
+                        const endPage = Math.min(startPage + BATCH_SIZE - 1, totalPagesCount);
+                        
+                        // 创建并行任务数组
+                        const tasks = [];
+                        for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+                            tasks.push(searchPageForKeywords(pageNum, groupKeywords, group));
+                        }
+                        
+                        // 并行执行这一批搜索
+                        await Promise.all(tasks);
+                        
+                        // 更新进度
+                        searchedPages = endPage;
+                        if (searchingNotif && searchingNotif.textContent) {
+                            const progress = Math.round((searchedPages / totalPagesCount) * 100);
+                            const cacheStatus = hasCache ? '缓存加速中' : '缓存中';
+                            searchingNotif.textContent = `搜索进度：${searchedPages}/${totalPagesCount} 页 (${progress}%) ${cacheStatus}`;
+                        }
+                        
+                        // 记录第一个匹配页
+                        if (firstPage === 0 && searchResults.length > 0) {
+                            firstPage = searchResults[0].pageNum;
                         }
                     }
                 }
                 
-                // 按页码排序搜索结果
-                searchResults.sort((a, b) => a.pageNum - b.pageNum);
-                
-                console.log(`使用关键词 [${validKeywords.join(', ')}] 找到 ${searchResults.length} 个匹配项`);
-                
-                // 渲染搜索结果到侧边栏
-                if (searchResults.length > 0) {
-                    renderSearchResults();
+                // 移除搜索中的通知
+                if (searchingNotif) {
+                    searchingNotif.classList.add('removing');
+                    setTimeout(() => searchingNotif.remove(), 300);
                 }
                 
-                return firstPage;
+                // 所有搜索完成，显示结果
+                if (searchResults.length > 0) {
+                    renderSearchResults();
+                    showNotification(`搜索完成！共找到 ${searchResults.length} 处匹配，点击结果可跳转`, 'success');
+                } else {
+                    showNotification('未找到匹配项', 'warning');
+                }
+                
+                // 不自动跳转，返回0
+                return 0;
+                
             } catch (error) {
                 console.error('搜索失败:', error);
+                showNotification('搜索失败: ' + error.message, 'error');
                 return 0;
             }
         }
 
-        // 渲染搜索结果到侧边栏
+        // 渲染搜索结果到侧边栏（分组显示，可展开收起）
         function renderSearchResults() {
-            const sidebar = document.getElementById('pdfSidebar');
-            const content = document.getElementById('pdfSidebarContent');
-            const countSpan = document.getElementById('resultCount');
-            
-            countSpan.textContent = searchResults.length;
-            
-            if (searchResults.length === 0) {
-                content.innerHTML = '<div class="no-results">暂无搜索结果</div>';
-                return;
+            try {
+                const sidebar = document.getElementById('pdfSidebar');
+                const content = document.getElementById('pdfSidebarContent');
+                const countSpan = document.getElementById('resultCount');
+                
+                countSpan.textContent = searchResults.length;
+                
+                if (searchResults.length === 0) {
+                    content.innerHTML = '<div class="no-results">暂无搜索结果</div>';
+                    return;
+                }
+                
+                // 按类型分组（保存原始索引）
+                const groupedResults = {
+                    'CAS号': [],
+                    '化学品名称': [],
+                    '别名': [],
+                    '关键词': []
+                };
+                
+                searchResults.forEach((result, originalIndex) => {
+                    const type = result.type || '关键词';
+                    if (groupedResults[type]) {
+                        groupedResults[type].push({
+                            ...result,
+                            originalIndex: originalIndex  // 保存原始索引
+                        });
+                    }
+                });
+                
+                // 清空内容
+                content.innerHTML = '';
+                
+                // 按优先级顺序显示各组结果（使用DOM操作而不是字符串拼接）
+                for (const [groupType, results] of Object.entries(groupedResults)) {
+                    if (results.length === 0) continue;
+                    
+                    const groupId = `group-${groupType.replace(/\s+/g, '-')}`;
+                    
+                    // 创建分组标题
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'search-group-title';
+                    titleDiv.id = `title-${groupId}`;
+                    titleDiv.onclick = () => toggleSearchGroup(groupId);
+                    titleDiv.innerHTML = `
+                        <span class="group-icon">${getGroupIcon(groupType)}</span>
+                        <span class="group-name">${groupType}</span>
+                        <span class="group-count">${results.length}</span>
+                        <span class="group-toggle">▼</span>
+                    `;
+                    content.appendChild(titleDiv);
+                    
+                    // 创建分组内容容器
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'search-group-content';
+                    contentDiv.id = `content-${groupId}`;
+                    
+                    // 显示该组的所有结果
+                    results.forEach((result) => {
+                        // 安全地转义和高亮关键词
+                        let highlightedContext = result.context || '';
+                        if (result.keyword) {
+                            const escapedKeyword = escapeRegExp(result.keyword);
+                            highlightedContext = highlightedContext.replace(
+                                new RegExp(escapedKeyword, 'g'),
+                                `<span class="search-result-keyword">${result.keyword}</span>`
+                            );
+                        }
+                        
+                        const isActive = result.pageNum === currentPageNum ? 'active' : '';
+                        
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = `search-result-item ${isActive}`;
+                        itemDiv.onclick = () => jumpToSearchResult(result.originalIndex);
+                        itemDiv.setAttribute('data-page', result.pageNum);
+                        itemDiv.setAttribute('data-original-index', result.originalIndex);
+                        itemDiv.innerHTML = `
+                            <div class="search-result-page"><i class="fas fa-file-alt"></i> 第 ${result.pageNum} 页</div>
+                            <div class="search-result-context">${highlightedContext}</div>
+                        `;
+                        contentDiv.appendChild(itemDiv);
+                    });
+                    
+                    content.appendChild(contentDiv);
+                }
+                
+                // 自动显示侧边栏
+                setTimeout(() => {
+                    sidebar.classList.add('show');
+                }, 500);
+                
+            } catch (error) {
+                console.error('渲染搜索结果时发生错误:', error);
+                showNotification('显示搜索结果时出错: ' + error.message, 'error');
             }
+        }
+        
+        // 切换搜索分组的展开/收起状态
+        function toggleSearchGroup(groupId) {
+            const titleElement = document.getElementById(`title-${groupId}`);
+            const contentElement = document.getElementById(`content-${groupId}`);
             
-            let html = '';
-            searchResults.forEach((result, index) => {
-                // 高亮关键词
-                const highlightedContext = result.context.replace(
-                    new RegExp(escapeRegExp(result.keyword), 'g'),
-                    `<span class="search-result-keyword">${result.keyword}</span>`
-                );
-                
-                const isActive = result.pageNum === currentPageNum ? 'active' : '';
-                
-                html += `
-                    <div class="search-result-item ${isActive}" onclick="jumpToSearchResult(${index})" data-page="${result.pageNum}">
-                        <div class="search-result-page">📄 第 ${result.pageNum} 页</div>
-                        <div class="search-result-context">${highlightedContext}</div>
-                    </div>
-                `;
-            });
-            
-            content.innerHTML = html;
-            
-            // 自动显示侧边栏
-            setTimeout(() => {
-                sidebar.classList.add('show');
-            }, 500);
+            if (titleElement && contentElement) {
+                titleElement.classList.toggle('collapsed');
+                contentElement.classList.toggle('collapsed');
+            }
+        }
+        
+        // 获取分组图标
+        function getGroupIcon(groupType) {
+            const icons = {
+                'CAS号': '<i class="fas fa-hashtag"></i>',
+                '化学品名称': '<i class="fas fa-flask"></i>',
+                '别名': '<i class="fas fa-tags"></i>',
+                '关键词': '<i class="fas fa-search"></i>'
+            };
+            return icons[groupType] || '<i class="fas fa-search"></i>';
         }
 
         // 跳转到指定搜索结果
@@ -3613,12 +3992,13 @@
             
             const result = searchResults[index];
             currentPageNum = result.pageNum;
-            await renderPage(currentPageNum, currentSearchKeyword);
+            await renderPage(currentPageNum);
             
-            // 更新侧边栏中的活动项
+            // 更新侧边栏中的活动项（根据 data-original-index 匹配）
             const items = document.querySelectorAll('.search-result-item');
-            items.forEach((item, i) => {
-                if (i === index) {
+            items.forEach((item) => {
+                const itemOriginalIndex = parseInt(item.getAttribute('data-original-index'));
+                if (itemOriginalIndex === index) {
                     item.classList.add('active');
                     item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
@@ -3638,8 +4018,8 @@
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
         
-        // 渲染PDF页面（支持文本图层和高亮）
-        async function renderPage(pageNum, highlightKeyword = '') {
+        // 渲染PDF页面（优化版：只渲染Canvas，不渲染文本图层）
+        async function renderPage(pageNum) {
             if (isRendering || !pdfDoc) return;
             
             isRendering = true;
@@ -3661,8 +4041,8 @@
                 
                 await page.render(renderContext).promise;
                 
-                // 渲染文本图层（用于搜索和高亮）
-                await renderTextLayer(page, viewport, highlightKeyword);
+                // 优化：不再渲染文本图层到DOM（已删除高亮功能，不需要DOM文本层）
+                // 搜索时直接使用 page.getTextContent() 即可，不需要文本图层
                 
                 // 更新页码显示
                 document.getElementById('currentPage').textContent = pageNum;
@@ -3676,7 +4056,7 @@
                 
             } catch (error) {
                 console.error('页面渲染失败:', error);
-                showNotification('❌ 页面渲染失败', 'error');
+                showNotification('页面渲染失败', 'error');
             } finally {
                 isRendering = false;
             }
@@ -3700,89 +4080,55 @@
             const textLayerDiv = document.getElementById('textLayer');
             textLayerDiv.innerHTML = ''; // 清空旧内容
             
-            // 设置文本图层尺寸
+            // 设置文本图层尺寸和缩放因子
             textLayerDiv.style.width = viewport.width + 'px';
             textLayerDiv.style.height = viewport.height + 'px';
+            textLayerDiv.style.setProperty('--scale-factor', viewport.scale);
             
             try {
                 // 获取文本内容
-                const textContent = await page.getTextContent();
+                const textContentSource = page.streamTextContent();
                 
-                // 使用PDF.js的renderTextLayer渲染文本
+                // 使用PDF.js的renderTextLayer渲染文本（使用新API）
                 const textLayer = pdfjsLib.renderTextLayer({
-                    textContent: textContent,
+                    textContentSource: textContentSource,
                     container: textLayerDiv,
-                    viewport: viewport,
-                    textDivs: []
+                    viewport: viewport
                 });
                 
                 await textLayer.promise;
                 
-                // 如果有搜索关键词，高亮显示
-                if (highlightKeyword) {
-                    highlightTextInLayer(textLayerDiv, highlightKeyword);
-                }
-                
             } catch (error) {
                 console.error('文本图层渲染失败:', error);
             }
-        }
-
-        // 在文本图层中高亮显示关键词
-        function highlightTextInLayer(textLayerDiv, keywords) {
-            if (!keywords) return;
-            
-            // 将关键词转换为数组
-            const keywordArray = Array.isArray(keywords) ? keywords : [keywords];
-            const validKeywords = keywordArray.filter(k => k && k.trim());
-            
-            if (validKeywords.length === 0) return;
-            
-            const textDivs = textLayerDiv.querySelectorAll('span');
-            textDivs.forEach(span => {
-                const text = span.textContent;
-                // 检查是否包含任何一个关键词
-                const hasMatch = validKeywords.some(keyword => text.includes(keyword));
-                if (hasMatch) {
-                    // 高亮包含关键词的文本
-                    span.classList.add('highlight');
-                    // 滚动到第一个高亮项
-                    if (!textLayerDiv.querySelector('.highlight.first')) {
-                        span.classList.add('first');
-                        setTimeout(() => {
-                            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 100);
-                    }
-                }
-            });
         }
         
         // 上一页
         async function previousPage() {
             if (currentPageNum <= 1) return;
             currentPageNum--;
-            await renderPage(currentPageNum, currentSearchKeyword);
+            await renderPage(currentPageNum);
         }
         
         // 下一页
         async function nextPage() {
             if (currentPageNum >= totalPagesCount) return;
             currentPageNum++;
-            await renderPage(currentPageNum, currentSearchKeyword);
+            await renderPage(currentPageNum);
         }
         
         // 放大
         async function zoomIn() {
             currentScale += 0.25;
             if (currentScale > 3.0) currentScale = 3.0;
-            await renderPage(currentPageNum, currentSearchKeyword);
+            await renderPage(currentPageNum);
         }
         
         // 缩小
         async function zoomOut() {
             currentScale -= 0.25;
             if (currentScale < 0.5) currentScale = 0.5;
-            await renderPage(currentPageNum, currentSearchKeyword);
+            await renderPage(currentPageNum);
         }
         
         // 关闭PDF查看器

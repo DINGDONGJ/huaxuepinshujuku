@@ -397,6 +397,56 @@ def delete_chemical():
     except Exception as e:
         return jsonify({'error': f'删除失败: {str(e)}'}), 500
 
+@app.route('/api/autocomplete', methods=['GET'])
+def autocomplete():
+    """自动补全API - 根据关键词返回候选化学品列表"""
+    keyword = request.args.get('keyword', '').strip()
+    
+    if not keyword:
+        return jsonify({'suggestions': []})
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # 搜索化学品（支持中文名、英文名、CAS号、别名模糊匹配）
+        cursor.execute("""
+            SELECT DISTINCT 
+                c.编号,
+                c.CAS号,
+                c.中文名,
+                c.英文名
+            FROM 化学品 c
+            LEFT JOIN 化学品别名 a ON c.编号 = a.化学品编号
+            WHERE c.中文名 LIKE %s
+               OR c.英文名 LIKE %s
+               OR c.CAS号 LIKE %s
+               OR a.别名 LIKE %s
+            ORDER BY 
+                CASE 
+                    WHEN c.中文名 = %s THEN 1
+                    WHEN c.中文名 LIKE %s THEN 2
+                    WHEN c.CAS号 = %s THEN 3
+                    WHEN c.CAS号 LIKE %s THEN 4
+                    ELSE 5
+                END,
+                c.中文名
+            LIMIT 10
+        """, (
+            f'%{keyword}%', f'%{keyword}%', f'%{keyword}%', f'%{keyword}%',
+            keyword, f'{keyword}%', keyword, f'{keyword}%'
+        ))
+        
+        suggestions = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'suggestions': process_results(suggestions)})
+    
+    except Exception as e:
+        return jsonify({'error': f'查询失败: {str(e)}'}), 500
+
 @app.route('/pdf/<path:filename>')
 def serve_pdf(filename):
     """提供PDF文件访问"""

@@ -57,7 +57,7 @@
         }
 
         .search-input {
-            flex: 1;
+            width: 100%;
             padding: 15px 20px;
             font-size: 16px;
             border: 2px solid #e0e0e0;
@@ -96,6 +96,96 @@
             color: #666;
             font-size: 14px;
             margin-top: 10px;
+        }
+
+        /* 自动补全相关样式 */
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .autocomplete-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: -10px;
+        }
+
+        .autocomplete-list.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: #f8f9ff;
+        }
+
+        .autocomplete-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .autocomplete-item-name {
+            flex: 1;
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        .autocomplete-item-cas {
+            color: #999;
+            font-size: 13px;
+            margin-left: 15px;
+        }
+
+        .autocomplete-item.active .autocomplete-item-cas {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .autocomplete-item-match {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .autocomplete-item.active .autocomplete-item-match {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .autocomplete-no-results {
+            padding: 15px 20px;
+            color: #999;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .autocomplete-loading {
+            padding: 15px 20px;
+            color: #667eea;
+            text-align: center;
+            font-size: 14px;
         }
 
         .import-toggle-btn {
@@ -211,6 +301,127 @@
 
         .selected-file.show {
             display: block;
+        }
+
+        /* 批量导入相关样式 */
+        .selected-files-container {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .selected-file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .selected-file-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .selected-file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .selected-file-icon {
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .selected-file-name {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .selected-file-size {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-left: 10px;
+        }
+
+        .selected-file-status {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-importing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .remove-file-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .remove-file-btn:hover {
+            color: #dc2626;
+            transform: scale(1.2);
+        }
+
+        /* 导入进度条样式 */
+        .import-progress {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: #374151;
+            text-align: center;
         }
 
         /* 通知容器 */
@@ -788,6 +999,35 @@
             color: #666;
         }
 
+        /* 法规查询按钮样式 */
+        .regulation-query-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .regulation-query-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .regulation-query-btn:active {
+            transform: translateY(0);
+        }
+
+        .regulation-query-btn .fas {
+            font-size: 14px;
+        }
+
         /* 删除按钮样式 */
         .delete-btn {
             background: #dc3545;
@@ -798,7 +1038,9 @@
             font-size: 13px;
             cursor: pointer;
             transition: all 0.3s;
-            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .delete-btn:hover {
@@ -1370,6 +1612,21 @@
                 align-items: flex-start;
             }
 
+            /* 移动端按钮样式调整 */
+            .regulation-query-btn,
+            .delete-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .chemical-name > div:last-child {
+                width: 100%;
+                margin-top: 10px;
+                flex-direction: column;
+            }
+
             .info-grid {
                 grid-template-columns: 1fr;
             }
@@ -1594,13 +1851,21 @@
 
         <div class="search-section">
             <div class="search-box">
+                <div class="search-input-wrapper">
                 <input 
                     type="text" 
                     class="search-input" 
                     id="searchInput" 
                     placeholder="请输入化学品中文名、英文名、CAS号或别名..."
-                    onkeypress="if(event.key === 'Enter') search()"
-                >
+                        onkeydown="handleSearchKeydown(event)"
+                        oninput="handleSearchInput()"
+                        onfocus="handleSearchFocus()"
+                        onblur="handleSearchBlur()"
+                        autocomplete="off"
+                    >
+                    <!-- 自动补全候选列表 -->
+                    <div class="autocomplete-list" id="autocompleteList"></div>
+                </div>
                 <button class="search-btn" onclick="search()"><i class="fas fa-search"></i> 查询</button>
                 <button class="list-btn" onclick="toggleSidebar()"><i class="fas fa-list"></i> 查看列表</button>
             </div>
@@ -1618,15 +1883,22 @@
                 <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
                     <div class="upload-icon"><i class="fas fa-file-code"></i></div>
                     <div class="upload-text">点击选择文件或拖拽到此处</div>
-                    <div class="upload-hint">仅支持 .json 格式文件</div>
+                    <div class="upload-hint">支持批量选择 .json 文件</div>
                 </div>
                 
-                <input type="file" id="fileInput" class="file-input" accept=".json" onchange="handleFileSelect(event)">
+                <input type="file" id="fileInput" class="file-input" accept=".json" multiple onchange="handleFileSelect(event)">
                 
-                <div class="selected-file" id="selectedFile"></div>
+                <div class="selected-files-container" id="selectedFilesContainer"></div>
+                
+                <div class="import-progress" id="importProgress" style="display: none;">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">准备导入...</div>
+                </div>
                 
                 <button class="import-btn" id="importBtn" onclick="importData()">
-                    <i class="fas fa-rocket"></i> 开始导入
+                    <i class="fas fa-rocket"></i> 开始批量导入
                 </button>
             </div>
         </div>
@@ -1637,6 +1909,181 @@
     </div>
 
     <script>
+        // ==================== 自动补全相关功能 ====================
+        
+        let autocompleteTimer = null;
+        let autocompleteSelectedIndex = -1;
+        let autocompleteItems = [];
+        
+        // 处理搜索框输入
+        function handleSearchInput() {
+            const input = document.getElementById('searchInput');
+            const keyword = input.value.trim();
+            
+            // 清除之前的定时器
+            if (autocompleteTimer) {
+                clearTimeout(autocompleteTimer);
+            }
+            
+            // 如果输入为空，隐藏候选列表
+            if (!keyword) {
+                hideAutocomplete();
+                return;
+            }
+            
+            // 延迟300ms搜索（防抖）
+            autocompleteTimer = setTimeout(() => {
+                fetchAutocomplete(keyword);
+            }, 300);
+        }
+        
+        // 获取自动补全候选项
+        async function fetchAutocomplete(keyword) {
+            const list = document.getElementById('autocompleteList');
+            
+            // 显示加载状态
+            list.innerHTML = '<div class="autocomplete-loading"><i class="fas fa-spinner fa-spin"></i> 搜索中...</div>';
+            list.classList.add('show');
+            
+            try {
+                // 调用后端API获取候选项
+                const response = await fetch(`/api/autocomplete?keyword=${encodeURIComponent(keyword)}`);
+                const data = await response.json();
+                
+                if (response.ok && data.suggestions && data.suggestions.length > 0) {
+                    renderAutocomplete(data.suggestions, keyword);
+                } else {
+                    list.innerHTML = '<div class="autocomplete-no-results">未找到匹配项</div>';
+                }
+            } catch (error) {
+                console.error('自动补全失败:', error);
+                list.innerHTML = '<div class="autocomplete-no-results">加载失败</div>';
+            }
+        }
+        
+        // 渲染自动补全列表
+        function renderAutocomplete(suggestions, keyword) {
+            const list = document.getElementById('autocompleteList');
+            autocompleteItems = suggestions;
+            autocompleteSelectedIndex = -1;
+            
+            let html = '';
+            suggestions.forEach((item, index) => {
+                // 高亮匹配的文本
+                let displayName = item.中文名;
+                const regex = new RegExp(`(${keyword})`, 'gi');
+                displayName = displayName.replace(regex, '<span class="autocomplete-item-match">$1</span>');
+                
+                // 检查是否CAS号匹配
+                let casDisplay = item.CAS号 || '';
+                if (casDisplay.includes(keyword)) {
+                    casDisplay = casDisplay.replace(regex, '<span class="autocomplete-item-match">$1</span>');
+                }
+                
+                html += `
+                    <div class="autocomplete-item" data-index="${index}" onclick="selectAutocomplete(${index})">
+                        <span class="autocomplete-item-name">${displayName}</span>
+                        ${casDisplay ? `<span class="autocomplete-item-cas">${casDisplay}</span>` : ''}
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+            list.classList.add('show');
+        }
+        
+        // 选择候选项
+        function selectAutocomplete(index) {
+            if (index >= 0 && index < autocompleteItems.length) {
+                const item = autocompleteItems[index];
+                document.getElementById('searchInput').value = item.中文名;
+                hideAutocomplete();
+                
+                // 自动执行搜索
+                search();
+            }
+        }
+        
+        // 隐藏自动补全列表
+        function hideAutocomplete() {
+            const list = document.getElementById('autocompleteList');
+            list.classList.remove('show');
+            list.innerHTML = '';
+            autocompleteSelectedIndex = -1;
+        }
+        
+        // 处理键盘事件
+        function handleSearchKeydown(event) {
+            const list = document.getElementById('autocompleteList');
+            
+            // 如果列表没有显示，只处理回车
+            if (!list.classList.contains('show')) {
+                if (event.key === 'Enter') {
+                    search();
+                }
+                return;
+            }
+            
+            const items = list.querySelectorAll('.autocomplete-item');
+            
+            if (event.key === 'ArrowDown') {
+                // 向下箭头
+                event.preventDefault();
+                autocompleteSelectedIndex = Math.min(autocompleteSelectedIndex + 1, items.length - 1);
+                updateAutocompleteSelection(items);
+            } else if (event.key === 'ArrowUp') {
+                // 向上箭头
+                event.preventDefault();
+                autocompleteSelectedIndex = Math.max(autocompleteSelectedIndex - 1, -1);
+                updateAutocompleteSelection(items);
+            } else if (event.key === 'Enter') {
+                // 回车键
+                event.preventDefault();
+                if (autocompleteSelectedIndex >= 0) {
+                    selectAutocomplete(autocompleteSelectedIndex);
+                } else {
+                    hideAutocomplete();
+                    search();
+                }
+            } else if (event.key === 'Escape') {
+                // ESC键
+                hideAutocomplete();
+            }
+        }
+        
+        // 更新选中状态
+        function updateAutocompleteSelection(items) {
+            items.forEach((item, index) => {
+                if (index === autocompleteSelectedIndex) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // 处理搜索框获得焦点
+        function handleSearchFocus() {
+            const input = document.getElementById('searchInput');
+            const keyword = input.value.trim();
+            
+            // 如果有输入内容，显示候选列表
+            if (keyword) {
+                fetchAutocomplete(keyword);
+            }
+        }
+        
+        // 处理搜索框失去焦点
+        function handleSearchBlur() {
+            // 延迟隐藏，以便点击候选项
+            setTimeout(() => {
+                hideAutocomplete();
+            }, 200);
+        }
+        
+        // ==================== 原有搜索功能 ====================
+        
         async function search() {
             const keyword = document.getElementById('searchInput').value.trim();
             
@@ -1703,9 +2150,14 @@
                             <span>${basic.中文名}</span>
                             <span class="en-name">${basic.英文名 || ''}</span>
                         </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="regulation-query-btn" onclick="queryRegulation('${basic.中文名.replace(/'/g, "\\'")}');">
+                                <i class="fas fa-gavel"></i> 法规查询
+                            </button>
                         <button class="delete-btn" onclick="showDeleteConfirm(${basic.编号}, '${basic.中文名.replace(/'/g, "\\'")}', '${basic.CAS号 || ''}', function() { document.getElementById('searchInput').value = ''; });">
-                            <i class="fas fa-trash-alt"></i> 删除化学品
+                                <i class="fas fa-trash-alt"></i> 删除化学品
                         </button>
+                        </div>
                     </div>
                     
                     <div class="info-grid">
@@ -3148,22 +3600,102 @@
             section.classList.toggle('show');
         }
 
-        // 处理文件选择
-        let selectedFile = null;
+        // 处理文件选择（支持批量）
+        let selectedFiles = [];
 
         function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                if (!file.name.endsWith('.json')) {
-                    showNotification('只支持JSON文件', 'error');
+            const files = Array.from(event.target.files);
+            
+            if (files.length === 0) {
                     return;
                 }
                 
-                selectedFile = file;
-                document.getElementById('selectedFile').textContent = `已选择: ${file.name}`;
-                document.getElementById('selectedFile').classList.add('show');
-                document.getElementById('importBtn').classList.add('show');
+            // 过滤只保留JSON文件
+            const jsonFiles = files.filter(file => file.name.endsWith('.json'));
+            
+            if (jsonFiles.length === 0) {
+                showNotification('请选择JSON文件', 'error');
+                return;
             }
+            
+            if (jsonFiles.length < files.length) {
+                showNotification(`已过滤 ${files.length - jsonFiles.length} 个非JSON文件`, 'warning');
+            }
+            
+            // 添加到选中文件列表
+            selectedFiles = jsonFiles.map(file => ({
+                file: file,
+                status: 'pending',
+                message: ''
+            }));
+            
+            // 渲染文件列表
+            renderSelectedFiles();
+            
+            // 显示导入按钮
+                document.getElementById('importBtn').classList.add('show');
+            
+            showNotification(`已选择 ${jsonFiles.length} 个文件`, 'success');
+        }
+        
+        // 渲染选中的文件列表
+        function renderSelectedFiles() {
+            const container = document.getElementById('selectedFilesContainer');
+            
+            if (selectedFiles.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            selectedFiles.forEach((item, index) => {
+                const file = item.file;
+                const fileSize = (file.size / 1024).toFixed(2);
+                const statusClass = `status-${item.status}`;
+                const statusText = {
+                    'pending': '待导入',
+                    'importing': '导入中...',
+                    'success': '成功',
+                    'error': '失败'
+                }[item.status];
+                
+                html += `
+                    <div class="selected-file-item" data-index="${index}">
+                        <div class="selected-file-info">
+                            <i class="fas fa-file-code selected-file-icon"></i>
+                            <div>
+                                <div class="selected-file-name">${file.name}</div>
+                                ${item.message ? `<div class="selected-file-size">${item.message}</div>` : `<div class="selected-file-size">${fileSize} KB</div>`}
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="selected-file-status ${statusClass}">${statusText}</span>
+                            ${item.status === 'pending' ? `<button class="remove-file-btn" onclick="removeFile(${index})" title="移除"><i class="fas fa-times"></i></button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 移除指定文件
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderSelectedFiles();
+            
+            if (selectedFiles.length === 0) {
+                document.getElementById('importBtn').classList.remove('show');
+            }
+            
+            showNotification('已移除文件', 'info');
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
         }
 
         // 处理拖拽上传
@@ -3182,35 +3714,75 @@
             e.preventDefault();
             uploadArea.classList.remove('dragover');
             
-            const files = e.dataTransfer.files;
+            const files = Array.from(e.dataTransfer.files);
             if (files.length > 0) {
-                const file = files[0];
-                if (file.name.endsWith('.json')) {
-                    selectedFile = file;
-                    document.getElementById('selectedFile').textContent = `已选择: ${file.name}`;
-                    document.getElementById('selectedFile').classList.add('show');
-                    document.getElementById('importBtn').classList.add('show');
-                } else {
-                    showNotification('只支持JSON文件', 'error');
+                // 过滤JSON文件
+                const jsonFiles = files.filter(file => file.name.endsWith('.json'));
+                
+                if (jsonFiles.length === 0) {
+                    showNotification('请拖拽JSON文件', 'error');
+                    return;
                 }
+                
+                if (jsonFiles.length < files.length) {
+                    showNotification(`已过滤 ${files.length - jsonFiles.length} 个非JSON文件`, 'warning');
+                }
+                
+                // 添加到选中文件列表
+                selectedFiles = jsonFiles.map(file => ({
+                    file: file,
+                    status: 'pending',
+                    message: ''
+                }));
+                
+                renderSelectedFiles();
+                document.getElementById('importBtn').classList.add('show');
+                showNotification(`已选择 ${jsonFiles.length} 个文件`, 'success');
             }
         });
 
-        // 导入数据
+        // 导入数据（批量导入）
         async function importData() {
-            if (!selectedFile) {
+            if (selectedFiles.length === 0) {
                 showNotification('请先选择文件', 'error');
                 return;
             }
 
             const importBtn = document.getElementById('importBtn');
+            const progressDiv = document.getElementById('importProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
             const originalText = importBtn.innerHTML;
-            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导入中...';
+            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 批量导入中...';
             importBtn.disabled = true;
+            
+            // 显示进度条
+            progressDiv.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = '准备导入...';
+
+            let successCount = 0;
+            let errorCount = 0;
+            const totalFiles = selectedFiles.length;
+
+            try {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const item = selectedFiles[i];
+                    const file = item.file;
+                    
+                    // 更新状态为导入中
+                    item.status = 'importing';
+                    renderSelectedFiles();
+                    
+                    // 更新进度
+                    const progress = Math.round(((i) / totalFiles) * 100);
+                    progressBar.style.width = progress + '%';
+                    progressText.textContent = `正在导入: ${file.name} (${i + 1}/${totalFiles})`;
 
             try {
                 const formData = new FormData();
-                formData.append('file', selectedFile);
+                        formData.append('file', file);
 
                 const response = await fetch('/api/import', {
                     method: 'POST',
@@ -3220,30 +3792,49 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showNotification(`${data.message}`, 'success');
+                            item.status = 'success';
+                            item.message = data.data.化学品名称;
+                            successCount++;
+                        } else {
+                            item.status = 'error';
+                            item.message = data.error || '导入失败';
+                            errorCount++;
+                        }
+                    } catch (error) {
+                        item.status = 'error';
+                        item.message = `网络错误: ${error.message}`;
+                        errorCount++;
+                    }
                     
-                    // 清空选择
-                    selectedFile = null;
-                    document.getElementById('fileInput').value = '';
-                    document.getElementById('selectedFile').classList.remove('show');
-                    document.getElementById('importBtn').classList.remove('show');
+                    renderSelectedFiles();
+                }
+                
+                // 导入完成
+                progressBar.style.width = '100%';
+                progressText.textContent = `导入完成！成功: ${successCount}, 失败: ${errorCount}`;
+                
+                // 显示总结通知
+                if (errorCount === 0) {
+                    showNotification(`✅ 批量导入成功！共导入 ${successCount} 个化学品`, 'success');
+                } else if (successCount === 0) {
+                    showNotification(`❌ 导入失败！${errorCount} 个文件导入失败`, 'error');
+                } else {
+                    showNotification(`⚠️ 部分导入成功！成功: ${successCount}, 失败: ${errorCount}`, 'warning');
+                }
                     
                     // 刷新化学品列表（如果已加载）
                     if (allChemicals.length > 0) {
                         loadChemicalList();
                     }
                     
-                    // 2秒后自动搜索导入的化学品
+                // 3秒后隐藏进度条并重置
                     setTimeout(() => {
-                        document.getElementById('searchInput').value = data.data.化学品名称;
-                        search();
-                        toggleImport();
-                    }, 2000);
-                } else {
-                    showNotification(`${data.error || '导入失败'}`, 'error');
-                }
+                    progressDiv.style.display = 'none';
+                    document.getElementById('fileInput').value = '';
+                }, 3000);
+                
             } catch (error) {
-                showNotification(`网络错误: ${error.message}`, 'error');
+                showNotification(`❌ 批量导入异常: ${error.message}`, 'error');
             } finally {
                 importBtn.innerHTML = originalText;
                 importBtn.disabled = false;
@@ -3442,6 +4033,21 @@
             
             // 执行搜索
             search();
+        }
+
+        // 查询化学品法规
+        function queryRegulation(chemicalName) {
+            // 对化学品名称进行URL编码
+            const encodedName = encodeURIComponent(chemicalName);
+            
+            // 构建法规查询网站URL
+            const regulationUrl = `https://law.chemicalsafety.org.cn/compliance/guild/customer/SearchAllCustomer.jsp?moduleId=2&type=all&keyContent=${encodedName}`;
+            
+            // 在新窗口打开法规查询页面
+            window.open(regulationUrl, '_blank');
+            
+            // 显示提示信息
+            showNotification(`正在查询"${chemicalName}"的相关法规...`, 'info');
         }
 
         // 显示删除确认对话框

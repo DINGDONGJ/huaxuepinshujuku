@@ -749,6 +749,341 @@ self.index = {
 
 ---
 
+### 5. PDF自动搜索化学品功能
+
+#### 5.1 功能概述
+
+当用户在MSDS第15章（法规信息）中点击法规PDF链接时，系统会自动在PDF中搜索当前化学品的**CAS号、中文名称和所有别名**，并高亮显示匹配结果，帮助用户快速定位化学品相关内容。
+
+#### 5.2 实现架构
+
+```
+用户搜索化学品
+    ↓
+系统保存化学品信息（CAS号、名称、别名）
+    ↓
+用户查看第15章法规信息
+    ↓
+点击法规PDF链接
+    ↓
+打开PDF查看器 + 异步执行智能搜索
+    ↓
+按优先级搜索：CAS号 → 名称 → 别名
+    ↓
+显示所有匹配项 + 自动跳转第一个匹配页
+```
+
+#### 5.3 关键实现步骤
+
+**步骤1：保存化学品信息** (`index.html` 2672-2677行)
+
+当用户搜索到化学品后，系统立即保存化学品信息到全局变量：
+
+```javascript
+// 保存当前化学品信息供PDF搜索使用
+currentChemicalInfo = {
+    cas: basic.CAS号 || '',          // "50-00-0"
+    name: basic.中文名 || '',         // "甲醛"
+    aliases: basic.所有别名 || ''     // "蚁醛、福尔马林"
+};
+```
+
+**全局变量定义** (`index.html` 4850-4855行)：
+```javascript
+let currentChemicalInfo = {
+    cas: '',
+    name: '',
+    aliases: ''
+};
+```
+
+**步骤2：渲染可点击的法规链接** (`index.html` 4093-4100行)
+
+在第15章中，将法规名称渲染为可点击链接：
+
+```javascript
+// 可点击的法规名称 - 自动搜索当前化学品（包括CAS号、名称、别名）
+html += `<div class="msds-field-label regulation-link" 
+              style="margin-top: 10px; margin-bottom: 8px; cursor: pointer;" 
+              onclick="openPdfViewerWithSearch('${pdfFile}', '${escapedLine}')"
+              title="点击查看PDF文件并自动搜索该化学品（含别名）">
+            ${line} <i class="fas fa-file-pdf"></i>
+        </div>`;
+```
+
+**显示效果：**
+- 法规名称带有PDF图标 📄
+- 鼠标悬停显示提示："点击查看PDF文件并自动搜索该化学品（含别名）"
+- 点击触发 `openPdfViewerWithSearch()` 函数
+
+**步骤3：打开PDF并准备搜索关键词** (`index.html` 4871-4892行)
+
+```javascript
+async function openPdfViewerWithSearch(pdfFileName, title = '法规文件') {
+    // 构建分组的搜索关键词对象
+    const keywordGroups = {
+        cas: currentChemicalInfo.cas || '',
+        name: currentChemicalInfo.name || '',
+        aliases: []
+    };
+    
+    if (currentChemicalInfo.aliases) {
+        // 别名可能是多个，用逗号、分号或顿号分隔
+        keywordGroups.aliases = currentChemicalInfo.aliases
+            .split(/[,，;；、\s]+/)  // 支持多种分隔符
+            .filter(a => {
+                const trimmed = a.trim();
+                // 过滤空字符串和"-"（表示无别名）
+                return trimmed && trimmed !== '-';
+            });
+    }
+    
+    // 调用PDF查看器，传入分组的关键词对象
+    await openPdfViewer(pdfFileName, 1, title, keywordGroups);
+}
+```
+
+**关键词分组示例：**
+```javascript
+// 对于"甲醛"
+keywordGroups = {
+    cas: "50-00-0",
+    name: "甲醛",
+    aliases: ["蚁醛", "福尔马林", "甲醛溶液"]
+}
+```
+
+**步骤4：加载PDF并异步搜索** (`index.html` 4894-4949行)
+
+```javascript
+async function openPdfViewer(pdfFileName, pageNumber = 1, title = '法规文件', searchKeyword = '') {
+    try {
+        showNotification('正在加载PDF文件...', 'info');
+        
+        // 加载PDF（配置CMap支持中文）
+        const loadingTask = pdfjsLib.getDocument({
+            url: pdfPath,
+            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+            cMapPacked: true
+        });
+        pdfDoc = await loadingTask.promise;
+        totalPagesCount = pdfDoc.numPages;
+        
+        // 保存搜索关键词
+        currentSearchKeyword = searchKeyword;
+        
+        // 始终显示第1页（不等待搜索）
+        currentPageNum = 1;
+        await renderPage(currentPageNum);
+        
+        // 立即显示查看器（优化UX：不阻塞界面）
+        document.getElementById('pdfViewerOverlay').classList.add('show');
+        showNotification('PDF加载成功', 'success');
+        
+        // 如果提供了搜索关键词，在后台异步执行搜索
+        if (searchKeyword) {
+            setTimeout(async () => {
+                await searchInPdf(searchKeyword);  // ← 核心搜索函数
+            }, 50);  // 延迟50ms，让PDF先显示
+        }
+    } catch (error) {
+        showNotification('PDF加载失败：' + error.message, 'error');
+    }
+}
+```
+
+**UX优化要点：**
+- PDF立即显示，不等待搜索完成
+- 搜索在后台异步执行
+- 用户可以立即浏览PDF，同时系统在后台搜索
+
+**步骤5：智能搜索算法** (`index.html` 5056-5200行)
+
+```javascript
+async function searchInPdf(keywords) {
+    if (!pdfDoc || !keywords) return 0;
+    
+    searchResults = [];
+    
+    // 构建搜索队列：按优先级排列
+    const searchQueue = [];
+    
+    if (typeof keywords === 'object' && !Array.isArray(keywords)) {
+        // 1. CAS号（包含匹配）- 最高优先级
+        if (keywords.cas && keywords.cas.trim()) {
+            searchQueue.push({
+                keyword: keywords.cas.trim(),
+                matchType: 'contains',  // 包含匹配（如"50-00-0"可匹配"CAS: 50-00-0"）
+                type: 'CAS号'
+            });
+        }
+        
+        // 2. 化学品名称（全字匹配）
+        if (keywords.name && keywords.name.trim()) {
+            searchQueue.push({
+                keyword: keywords.name.trim(),
+                matchType: 'exact',  // 精确匹配
+                type: '化学品名称'
+            });
+        }
+        
+        // 3. 别名（全字匹配）
+        if (keywords.aliases && keywords.aliases.length > 0) {
+            keywords.aliases.forEach(alias => {
+                if (alias && alias.trim()) {
+                    searchQueue.push({
+                        keyword: alias.trim(),
+                        matchType: 'exact',
+                        type: '别名'
+                    });
+                }
+            });
+        }
+    }
+    
+    // 配置参数
+    const BATCH_SIZE = hasCache ? 100 : 50;  // 有缓存时加大批次
+    
+    // 按优先级分组搜索
+    for (const group of ['CAS号', '化学品名称', '别名', '关键词']) {
+        const groupKeywords = searchQueue.filter(k => k.type === group);
+        if (groupKeywords.length === 0) continue;
+        
+        // 分批并行处理（性能优化）
+        for (let startPage = 1; startPage <= totalPagesCount; startPage += BATCH_SIZE) {
+            const endPage = Math.min(startPage + BATCH_SIZE - 1, totalPagesCount);
+            
+            // 创建并行任务数组
+            const tasks = [];
+            for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+                tasks.push(searchPageForKeywords(pageNum, groupKeywords, group));
+            }
+            
+            // 并行执行这一批搜索
+            await Promise.all(tasks);
+            
+            // 更新进度
+            searchedPages = endPage;
+            const progress = Math.round((searchedPages / totalPagesCount) * 100);
+            searchingNotif.textContent = `搜索进度：${searchedPages}/${totalPagesCount} 页 (${progress}%)`;
+        }
+        
+        // 如果找到匹配，跳转到第一个匹配项
+        if (searchResults.length > 0 && firstPage === 0) {
+            firstPage = searchResults[0].pageNum;
+            break;  // 找到后立即停止搜索其他组
+        }
+    }
+    
+    // 显示搜索结果
+    displaySearchResults();
+    
+    // 自动跳转到第一个匹配页
+    if (firstPage > 0) {
+        await goToPage(firstPage);
+    }
+    
+    return searchResults.length;
+}
+```
+
+**搜索策略说明：**
+
+1. **优先级搜索**：
+   - 优先级1：CAS号（包含匹配）
+   - 优先级2：化学品名称（精确匹配）
+   - 优先级3：别名（精确匹配）
+   - 找到任意一个匹配后立即停止搜索其他组
+
+2. **匹配类型**：
+   - **包含匹配**（contains）：适用于CAS号，因为PDF中可能写成"CAS No.: 50-00-0"
+   - **精确匹配**（exact）：适用于名称和别名，避免误匹配（如"甲醛"不会匹配"聚甲醛"）
+
+3. **性能优化**：
+   - **文本缓存**：首次搜索后缓存每页文本，后续搜索无需重复提取
+   - **批量并行**：50-100页为一批并行搜索，大幅提升速度
+   - **早停机制**：找到匹配后立即停止搜索其他优先级组
+
+4. **搜索结果展示**：
+   - 侧边栏显示所有匹配项（页码、关键词类型、上下文）
+   - 自动跳转到第一个匹配页
+   - 在PDF页面上高亮显示匹配内容
+
+#### 5.4 使用示例
+
+**场景：用户搜索"甲醛"**
+
+1. 系统保存化学品信息：
+   ```javascript
+   currentChemicalInfo = {
+       cas: "50-00-0",
+       name: "甲醛",
+       aliases: "蚁醛、福尔马林、甲醛溶液"
+   }
+   ```
+
+2. 用户查看第15章，看到法规链接：
+   ```
+   《危险化学品目录（2015版）》 📄
+   ```
+
+3. 点击链接，系统：
+   - 打开PDF查看器，显示第1页
+   - 后台搜索4个关键词：
+     - "50-00-0" (CAS号，包含匹配)
+     - "甲醛" (名称，精确匹配)
+     - "蚁醛" (别名1，精确匹配)
+     - "福尔马林" (别名2，精确匹配)
+
+4. 搜索结果：
+   ```
+   ✅ 在第58页找到 "50-00-0" (CAS号)
+   ✅ 在第58页找到 "甲醛" (化学品名称)
+   ✅ 在第195页找到 "福尔马林" (别名)
+   
+   → 自动跳转到第58页（第一个匹配）
+   → 侧边栏显示3个匹配项
+   ```
+
+#### 5.5 代码位置汇总
+
+| 功能模块 | 文件 | 行数 | 说明 |
+|---------|------|------|------|
+| 全局变量定义 | `index.html` | 4850-4855 | 定义 `currentChemicalInfo` |
+| 保存化学品信息 | `index.html` | 2672-2677 | 搜索结果展示时保存 |
+| 渲染可点击链接 | `index.html` | 4093-4100 | 第15章法规链接渲染 |
+| 打开PDF入口 | `index.html` | 4871-4892 | `openPdfViewerWithSearch()` |
+| PDF加载函数 | `index.html` | 4894-4949 | `openPdfViewer()` |
+| 智能搜索算法 | `index.html` | 5056-5200 | `searchInPdf()` |
+
+#### 5.6 技术亮点
+
+1. **用户体验优化**
+   - PDF立即显示，搜索不阻塞界面
+   - 实时进度提示
+   - 自动跳转到第一个匹配项
+   - 支持侧边栏浏览所有匹配结果
+
+2. **性能优化**
+   - 文本缓存机制（避免重复提取）
+   - 批量并行搜索（50-100页/批）
+   - 早停机制（找到即停）
+   - 智能缓存策略（Map结构存储）
+
+3. **智能匹配**
+   - 优先级搜索（CAS号 > 名称 > 别名）
+   - 双重匹配模式（包含/精确）
+   - 自动过滤无效别名（空字符串、"-"）
+   - 支持多种别名分隔符
+
+4. **健壮性**
+   - 异常处理机制
+   - 兼容旧格式搜索
+   - 支持中文PDF（CMap配置）
+   - 避免重复搜索同一组
+
+---
+
 ## 数据库设计
 
 ### 表结构

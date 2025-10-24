@@ -2344,7 +2344,7 @@
                 <!-- 搜索框 -->
                 <div class="pdf-search-box">
                     <input type="text" id="pdfSearchInput" placeholder="搜索文本..." onkeypress="handleSearchEnter(event)">
-                    <button onclick="searchInPdf()" id="searchBtn"><i class="fas fa-search"></i></button>
+                    <button onclick="manualSearchInPdf()" id="searchBtn"><i class="fas fa-search"></i></button>
                     <button onclick="findNext()" id="nextMatchBtn" disabled><i class="fas fa-chevron-down"></i></button>
                     <button onclick="findPrevious()" id="prevMatchBtn" disabled><i class="fas fa-chevron-up"></i></button>
                 </div>
@@ -5479,8 +5479,8 @@
         let currentMatchIndex = -1;
         let currentSearchText = '';
         
-        // 搜索PDF文本
-        async function searchInPdf() {
+        // 手动搜索PDF文本（从输入框）
+        async function manualSearchInPdf() {
             const searchInput = document.getElementById('pdfSearchInput');
             const searchText = searchInput.value.trim();
             
@@ -5652,7 +5652,7 @@
         // 回车搜索
         function handleSearchEnter(event) {
             if (event.key === 'Enter') {
-                searchInPdf();
+                manualSearchInPdf();
             }
         }
         

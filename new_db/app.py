@@ -9,6 +9,7 @@ import json
 from decimal import Decimal
 from datetime import datetime
 import os
+from regulation_content_indexer import RegulationContentIndexer
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 限制上传文件大小为16MB
@@ -18,6 +19,15 @@ app.config['PDF_FOLDER'] = 'pdf'
 # 确保文件夹存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['PDF_FOLDER'], exist_ok=True)
+
+# 初始化法规内容索引器
+regulation_indexer = RegulationContentIndexer()
+print("📚 加载法规内容索引...")
+if regulation_indexer.load_index():
+    print(f"✅ 索引加载成功！共 {regulation_indexer.index['stats']['total_files']} 个法规文件")
+else:
+    print("⚠️  索引文件不存在，将跳过内容匹配功能")
+    print("   提示：运行 python regulation_content_indexer.py 构建索引")
 
 # 数据库配置
 DB_CONFIG = {
@@ -57,6 +67,191 @@ def process_results(results):
         processed.append(processed_row)
     
     return processed
+
+def extract_number_from_text(text, pattern=r'(\d+\.?\d*)'):
+    """从文本中提取数值"""
+    import re
+    match = re.search(pattern, text)
+    if match:
+        try:
+            return float(match.group(1))
+        except:
+            return None
+    return None
+
+def extract_transport_class(content):
+    """从第14章提取UN运输分类"""
+    import re
+    # 匹配联合国危险货物编号（UN编号）和类别
+    patterns = [
+        r'UN\s*编号[：:]\s*(\d+)',
+        r'联合国危险货物编号[：:]\s*(\d+)',
+        r'联合国编号[：:]\s*(\d+)',
+        r'UN\s+No\.\s*[：:]?\s*(\d+)'
+    ]
+    
+    un_number = None
+    for pattern in patterns:
+        match = re.search(pattern, content, re.IGNORECASE)
+        if match:
+            un_number = match.group(1)
+            break
+    
+    # 提取运输危险类别
+    class_patterns = [
+        r'运输危险类别[：:]\s*(\d+\.?\d*)',
+        r'危险性类别[：:]\s*(\d+\.?\d*)',
+        r'类别[：:]\s*(\d+\.?\d*)',
+        r'Class\s*[：:]?\s*(\d+\.?\d*)'
+    ]
+    
+    transport_class = None
+    for pattern in class_patterns:
+        match = re.search(pattern, content, re.IGNORECASE)
+        if match:
+            transport_class = match.group(1).split('.')[0]  # 取整数部分
+            break
+    
+    # 检查是否为海洋污染物
+    marine_pollutant = False
+    if any(keyword in content for keyword in ['海洋污染物', '海洋污染', 'Marine pollutant', 'MARPOL']):
+        marine_pollutant = True
+    
+    return transport_class, marine_pollutant
+
+def extract_flash_point(content):
+    """从第9章提取闪点"""
+    import re
+    patterns = [
+        r'闪点[：:]\s*(-?\d+\.?\d*)\s*[℃°C]',
+        r'闪点[：:]\s*(-?\d+\.?\d*)',
+        r'Flash\s+point\s*[：:]?\s*(-?\d+\.?\d*)\s*[℃°C]'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, content, re.IGNORECASE)
+        if match:
+            try:
+                return float(match.group(1))
+            except:
+                pass
+    return None
+
+def extract_ld50(content):
+    """从第11章提取LD50值（mg/kg）"""
+    import re
+    # 匹配格式：LD50 经口 - 大鼠 500 mg/kg
+    patterns = [
+        r'LD50\s*[经纬]*口[^>]*?(\d+\.?\d*)\s*mg/kg',
+        r'急性经口毒性.*?LD50[^>]*?(\d+\.?\d*)\s*mg/kg',
+        r'LD50.*?oral.*?(\d+\.?\d*)\s*mg/kg'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, content, re.IGNORECASE | re.DOTALL)
+        if match:
+            try:
+                return float(match.group(1))
+            except:
+                pass
+    return None
+
+def extract_aquatic_lc50(content):
+    """从第12章提取对水生生物的LC50值（mg/L）"""
+    import re
+    patterns = [
+        r'LC50.*?鱼.*?(\d+\.?\d*)\s*mg/L',
+        r'对鱼类的急性毒性.*?LC50.*?(\d+\.?\d*)\s*mg/L',
+        r'LC50.*?fish.*?(\d+\.?\d*)\s*mg/L'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, content, re.IGNORECASE | re.DOTALL)
+        if match:
+            try:
+                return float(match.group(1))
+            except:
+                pass
+    return None
+
+def extract_keywords_from_msds(chemical_name, cas_number, chapters):
+    """从化学品信息和MSDS章节中提取关键词"""
+    import re
+    keywords = set()
+    
+    # 1. 添加化学品基本信息
+    if chemical_name:
+        keywords.add(chemical_name)
+        # 提取化学品名称中的关键部分
+        # 例如："甲醇" -> "甲", "醇"
+        for char in chemical_name:
+            if len(char) >= 2:
+                keywords.add(char)
+    
+    if cas_number:
+        keywords.add(cas_number)
+    
+    # 2. 从各章节提取关键词
+    for chapter in chapters:
+        content = chapter.get('内容', '')
+        chapter_num = chapter.get('章节序号', 0)
+        
+        # 第2章：危险性概述 - 提取GHS分类
+        if chapter_num == 2:
+            ghs_keywords = [
+                '易燃液体', '易燃气体', '易燃固体', '爆炸物', '氧化性液体', 
+                '氧化性固体', '氧化性气体', '加压气体', '自反应物质', 
+                '自燃液体', '自燃固体', '自热物质', '遇水放出易燃气体',
+                '有机过氧化物', '金属腐蚀物', '急性毒性', '皮肤腐蚀',
+                '严重眼损伤', '呼吸道致敏', '皮肤致敏', '生殖细胞致突变',
+                '致癌', '生殖毒性', '特异性靶器官毒性', '吸入危害',
+                '对水生环境的危害', '对臭氧层的危害', '腐蚀', '刺激'
+            ]
+            for kw in ghs_keywords:
+                if kw in content:
+                    keywords.add(kw)
+            
+            # 提取类别信息
+            category_matches = re.findall(r'类别\s*[1-4A-E]', content)
+            keywords.update(category_matches)
+        
+        # 第9章：理化特性 - 提取物态和特性
+        elif chapter_num == 9:
+            property_keywords = ['易燃', '可燃', '液体', '固体', '气体', '粉末']
+            for kw in property_keywords:
+                if kw in content:
+                    keywords.add(kw)
+        
+        # 第11章：毒理学信息 - 提取毒性关键词
+        elif chapter_num == 11:
+            toxicity_keywords = ['剧毒', '高毒', '中等毒性', '低毒', '微毒', '急性毒性', '慢性毒性']
+            for kw in toxicity_keywords:
+                if kw in content:
+                    keywords.add(kw)
+        
+        # 第14章：运输信息 - 提取运输分类
+        elif chapter_num == 14:
+            # 提取UN编号
+            un_matches = re.findall(r'UN\s*(\d{4})', content)
+            keywords.update(f'UN{un}' for un in un_matches)
+            
+            # 提取运输类别
+            class_matches = re.findall(r'类别\s*[：:]\s*(\d)', content)
+            keywords.update(f'运输类别{c}' for c in class_matches)
+            
+            if '海洋污染物' in content:
+                keywords.add('海洋污染物')
+        
+        # 第15章：法规信息 - 提取已列入的法规
+        elif chapter_num == 15:
+            # 提取法规名称（书名号内容）
+            regulation_matches = re.findall(r'《(.+?)》', content)
+            keywords.update(regulation_matches)
+    
+    # 过滤太短或无效的关键词
+    keywords = {kw for kw in keywords if len(kw) >= 2 and kw.strip()}
+    
+    return list(keywords)
 
 @app.route('/')
 def index():
@@ -446,6 +641,309 @@ def autocomplete():
     
     except Exception as e:
         return jsonify({'error': f'查询失败: {str(e)}'}), 500
+
+@app.route('/api/regulations/<int:chemical_id>', methods=['GET'])
+def get_regulations(chemical_id):
+    """获取化学品相关法规"""
+    try:
+        # 1. 查询化学品信息和MSDS数据
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # 获取化学品基本信息
+        cursor.execute("""
+            SELECT c.编号, c.CAS号, c.中文名, c.英文名
+            FROM 化学品 c
+            WHERE c.编号 = %s
+        """, (chemical_id,))
+        chemical = cursor.fetchone()
+        
+        if not chemical:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': '化学品不存在'}), 404
+        
+        # 获取MSDS章节数据（第2,9,11,14,15章）
+        cursor.execute("""
+            SELECT s.章节序号, s.章节标题, s.内容
+            FROM MSDS文档 d
+            JOIN MSDS章节 s ON d.编号 = s.文档编号
+            WHERE d.化学品编号 = %s AND s.章节序号 IN (2, 9, 11, 14, 15)
+            ORDER BY s.章节序号
+        """, (chemical_id,))
+        chapters = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        # 2. 加载法规映射配置
+        mapping_file = os.path.join(os.path.dirname(__file__), 'regulation_mapping.json')
+        with open(mapping_file, 'r', encoding='utf-8') as f:
+            regulation_mapping = json.load(f)
+        
+        # 3. 智能匹配法规
+        matched_regulations = []
+        
+        # 3.1 从第15章提取法规列入状态
+        chapter15 = next((ch for ch in chapters if ch['章节序号'] == 15), None)
+        if chapter15:
+            content = chapter15['内容']
+            
+            # 解析法规列入状态
+            for regulation_name, regulation_info in regulation_mapping['regulation_catalog_mapping'].items():
+                # 去掉书名号，用于匹配
+                clean_name = regulation_name.strip('《》')
+                
+                # 检查是否列入该法规
+                if clean_name in content:
+                    # 查找"列入"状态
+                    lines = content.split('\n')
+                    is_listed = False
+                    for i, line in enumerate(lines):
+                        if clean_name in line:
+                            # 在后面几行内查找"列入"
+                            for j in range(i, min(i+5, len(lines))):
+                                if '列入' in lines[j]:
+                                    is_listed = True
+                                    break
+                            break
+                    
+                    if is_listed:
+                        for file_path in regulation_info['files']:
+                            matched_regulations.append({
+                                'file': file_path,
+                                'name': os.path.basename(file_path).replace('.pdf', ''),
+                                'reason': f'MSDS数据显示可能涉及{regulation_name}',
+                                'priority': regulation_info['priority'],
+                                'category': regulation_info['category']
+                            })
+        
+        # 3.2 从第2章提取GHS危险性类别
+        chapter2 = next((ch for ch in chapters if ch['章节序号'] == 2), None)
+        if chapter2:
+            content = chapter2['内容']
+            
+            # 匹配GHS分类
+            for ghs_name, ghs_info in regulation_mapping['ghs_category_mapping'].items():
+                # 检查关键词
+                keywords = ghs_info.get('keywords', [ghs_name])
+                for keyword in keywords:
+                    if keyword in content:
+                        for file_path in ghs_info['files']:
+                            # 避免重复添加
+                            if not any(r['file'] == file_path for r in matched_regulations):
+                                matched_regulations.append({
+                                    'file': file_path,
+                                    'name': os.path.basename(file_path).replace('.pdf', ''),
+                                    'reason': f'危险特性匹配度：{ghs_name}',
+                                    'priority': ghs_info['priority'],
+                                    'category': ghs_info['category']
+                                })
+                        break  # 找到一个关键词即可
+        
+        # 3.3 从第14章提取运输分类信息
+        chapter14 = next((ch for ch in chapters if ch['章节序号'] == 14), None)
+        if chapter14:
+            content = chapter14['内容']
+            transport_class, marine_pollutant = extract_transport_class(content)
+            
+            # 匹配运输分类法规
+            if transport_class and 'transport_class_mapping' in regulation_mapping:
+                if transport_class in regulation_mapping['transport_class_mapping']:
+                    class_info = regulation_mapping['transport_class_mapping'][transport_class]
+                    for file_path in class_info['files']:
+                        if not any(r['file'] == file_path for r in matched_regulations):
+                            matched_regulations.append({
+                                'file': file_path,
+                                'name': os.path.basename(file_path).replace('.pdf', ''),
+                                'reason': f'运输分类匹配：{class_info["name"]}（第{transport_class}类）',
+                                'priority': class_info['priority'],
+                                'category': class_info['category']
+                            })
+            
+            # 匹配海洋污染物
+            if marine_pollutant and 'marine_pollutant_mapping' in regulation_mapping:
+                marine_info = regulation_mapping['marine_pollutant_mapping']['是']
+                for file_path in marine_info['files']:
+                    if not any(r['file'] == file_path for r in matched_regulations):
+                        matched_regulations.append({
+                            'file': file_path,
+                            'name': os.path.basename(file_path).replace('.pdf', ''),
+                            'reason': 'MSDS数据显示该物质可能为海洋污染物',
+                            'priority': marine_info['priority'],
+                            'category': marine_info['category']
+                        })
+        
+        # 3.4 从第9章提取理化特性
+        chapter9 = next((ch for ch in chapters if ch['章节序号'] == 9), None)
+        if chapter9:
+            content = chapter9['内容']
+            flash_point = extract_flash_point(content)
+            
+            # 匹配闪点范围
+            if flash_point is not None and 'flash_point_mapping' in regulation_mapping:
+                for range_key, range_info in regulation_mapping['flash_point_mapping'].items():
+                    min_val = range_info.get('min', float('-inf'))
+                    max_val = range_info.get('max', float('inf'))
+                    
+                    if min_val <= flash_point < max_val:
+                        for file_path in range_info['files']:
+                            if not any(r['file'] == file_path for r in matched_regulations):
+                                matched_regulations.append({
+                                    'file': file_path,
+                                    'name': os.path.basename(file_path).replace('.pdf', ''),
+                                    'reason': f'闪点特性：{range_info["name"]}（{flash_point}℃）',
+                                    'priority': range_info['priority'],
+                                    'category': range_info['category']
+                                })
+                        break  # 只匹配一个范围
+            
+            # 检查易燃性描述
+            if 'flammability_mapping' in regulation_mapping:
+                if '易燃' in content:
+                    # 判断是液体还是固体
+                    if any(keyword in content for keyword in ['液体', '液态']):
+                        if '易燃' in regulation_mapping['flammability_mapping']:
+                            flam_info = regulation_mapping['flammability_mapping']['易燃']
+                            for file_path in flam_info['files']:
+                                if not any(r['file'] == file_path for r in matched_regulations):
+                                    matched_regulations.append({
+                                        'file': file_path,
+                                        'name': os.path.basename(file_path).replace('.pdf', ''),
+                                        'reason': '理化特性显示该物质可能为易燃物',
+                                        'priority': flam_info['priority'],
+                                        'category': flam_info['category']
+                                    })
+                    elif any(keyword in content for keyword in ['固体', '固态', '粉末']):
+                        if '固体_易燃' in regulation_mapping['flammability_mapping']:
+                            flam_info = regulation_mapping['flammability_mapping']['固体_易燃']
+                            for file_path in flam_info['files']:
+                                if not any(r['file'] == file_path for r in matched_regulations):
+                                    matched_regulations.append({
+                                        'file': file_path,
+                                        'name': os.path.basename(file_path).replace('.pdf', ''),
+                                        'reason': '理化特性显示该物质可能为易燃固体',
+                                        'priority': flam_info['priority'],
+                                        'category': flam_info['category']
+                                    })
+        
+        # 3.5 从第11章提取毒理学信息
+        chapter11 = next((ch for ch in chapters if ch['章节序号'] == 11), None)
+        if chapter11:
+            content = chapter11['内容']
+            ld50 = extract_ld50(content)
+            
+            # 匹配LD50范围
+            if ld50 is not None and 'toxicity_mapping' in regulation_mapping:
+                if 'ld50_ranges' in regulation_mapping['toxicity_mapping']:
+                    for range_info in regulation_mapping['toxicity_mapping']['ld50_ranges']:
+                        min_val = range_info.get('min', float('-inf'))
+                        max_val = range_info.get('max', float('inf'))
+                        
+                        if min_val <= ld50 < max_val:
+                            for file_path in range_info['files']:
+                                if not any(r['file'] == file_path for r in matched_regulations):
+                                    matched_regulations.append({
+                                        'file': file_path,
+                                        'name': os.path.basename(file_path).replace('.pdf', ''),
+                                        'reason': f'毒性指标：{range_info["name"]}（LD50={ld50} mg/kg）',
+                                        'priority': range_info['priority'],
+                                        'category': range_info['category']
+                                    })
+                            break  # 只匹配一个范围
+            
+            # 提取水生生物毒性
+            aquatic_lc50 = extract_aquatic_lc50(content)
+            if aquatic_lc50 is not None and 'aquatic_toxicity_mapping' in regulation_mapping:
+                if 'lc50_ranges' in regulation_mapping['aquatic_toxicity_mapping']:
+                    for range_info in regulation_mapping['aquatic_toxicity_mapping']['lc50_ranges']:
+                        min_val = range_info.get('min', float('-inf'))
+                        max_val = range_info.get('max', float('inf'))
+                        
+                        if min_val <= aquatic_lc50 < max_val:
+                            for file_path in range_info['files']:
+                                if not any(r['file'] == file_path for r in matched_regulations):
+                                    matched_regulations.append({
+                                        'file': file_path,
+                                        'name': os.path.basename(file_path).replace('.pdf', ''),
+                                        'reason': f'水生毒性：{range_info["name"]}（LC50={aquatic_lc50} mg/L）',
+                                        'priority': range_info['priority'],
+                                        'category': range_info['category']
+                                    })
+                            break
+        
+        # 3.6 添加通用法规
+        common_info = regulation_mapping['common_regulations']
+        for file_path in common_info['files']:
+            if not any(r['file'] == file_path for r in matched_regulations):
+                matched_regulations.append({
+                    'file': file_path,
+                    'name': os.path.basename(file_path).replace('.pdf', ''),
+                    'reason': '基础法规参考',
+                    'priority': common_info['priority'],
+                    'category': common_info['category']
+                })
+        
+        # 3.7 内容智能匹配（基于法规文本内容）
+        if regulation_indexer.index:  # 确保索引已加载
+            try:
+                # 提取MSDS关键词
+                keywords = extract_keywords_from_msds(
+                    chemical.get('中文名', ''),
+                    chemical.get('CAS号', ''),
+                    chapters
+                )
+                
+                # 使用索引搜索相关法规
+                content_matches = regulation_indexer.search_by_keywords(keywords, max_results=10)
+                
+                # 添加内容匹配的法规（优先级4）
+                for match in content_matches:
+                    file_path = match['file']
+                    # 避免重复添加已匹配的法规
+                    if not any(r['file'] == file_path for r in matched_regulations):
+                        matched_regulations.append({
+                            'file': file_path,
+                            'name': match['title'] or os.path.basename(file_path).replace('.pdf', ''),
+                            'reason': match['reason'],
+                            'priority': 4,  # 内容匹配优先级为4（低于配置匹配）
+                            'category': match.get('category', '内容推荐'),
+                            'score': match.get('score', 0)  # 保留匹配分数
+                        })
+            except Exception as e:
+                print(f"⚠️  内容匹配失败: {e}")
+                # 内容匹配失败不影响其他匹配，继续执行
+        
+        # 4. 按优先级排序
+        matched_regulations.sort(key=lambda x: x['priority'])
+        
+        # 5. 按分类分组
+        regulations_by_category = {}
+        for reg in matched_regulations:
+            category = reg['category']
+            if category not in regulations_by_category:
+                regulations_by_category[category] = []
+            regulations_by_category[category].append(reg)
+        
+        return jsonify({
+            'chemical': process_results([chemical])[0] if chemical else None,
+            'total': len(matched_regulations),
+            'regulations': matched_regulations,
+            'by_category': regulations_by_category
+        })
+    
+    except Exception as e:
+        return jsonify({'error': f'获取法规失败: {str(e)}'}), 500
+
+@app.route('/regulation-pdf/<path:filepath>')
+def serve_regulation_pdf(filepath):
+    """提供法规PDF文件访问"""
+    try:
+        # 法规PDF文件在化学品法规pdf文件夹中
+        regulation_folder = os.path.join(os.path.dirname(__file__), '化学品法规pdf')
+        return send_from_directory(regulation_folder, filepath)
+    except FileNotFoundError:
+        return jsonify({'error': 'PDF文件未找到'}), 404
 
 @app.route('/pdf/<path:filename>')
 def serve_pdf(filename):

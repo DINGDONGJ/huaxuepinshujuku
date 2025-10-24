@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>危化品MSDS查询系统</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚗️</text></svg>">
     <style>
         * {
             margin: 0;
@@ -1055,6 +1056,146 @@
             border-radius: 4px;
         }
 
+        /* 法规展示区域样式 */
+        .regulations-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .regulations-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .regulations-title .fas {
+            color: #667eea;
+        }
+
+        .regulations-count {
+            font-size: 14px;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+
+        .regulations-loading {
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .regulations-loading .fas {
+            margin-right: 8px;
+        }
+
+        .regulations-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .regulation-category {
+            background: #f8fafc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .regulation-category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .regulation-category-header .fas {
+            font-size: 16px;
+        }
+
+        .regulation-category-title {
+            flex: 1;
+        }
+
+        .regulation-category-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .regulation-items {
+            padding: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+        }
+
+        .regulation-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .regulation-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .regulation-item-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .regulation-item-icon {
+            color: #ef4444;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .regulation-item-name {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 14px;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .regulation-item-reason {
+            font-size: 12px;
+            color: #64748b;
+            padding-left: 26px;
+            line-height: 1.5;
+        }
+
+        .no-regulations {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .no-regulations .fas {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
         /* 确认对话框样式 */
         .confirm-dialog-overlay {
             position: fixed;
@@ -1300,6 +1441,97 @@
             border: 1px solid #ddd;
             font-weight: 500;
             color: #495057;
+        }
+
+        /* PDF页数跳转输入框 */
+        .pdf-page-jump {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .pdf-page-jump input {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pdf-page-jump input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .pdf-page-jump button {
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .pdf-page-jump button:hover {
+            background: #764ba2;
+        }
+
+        /* PDF搜索框 */
+        .pdf-search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .pdf-search-box input {
+            width: 200px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .pdf-search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .pdf-search-box button {
+            padding: 4px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .pdf-search-box button:hover {
+            background: #764ba2;
+        }
+
+        .pdf-search-box button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pdf-search-results {
+            font-size: 12px;
+            color: #666;
+            padding: 0 8px;
         }
 
         .pdf-viewer-content {
@@ -1596,8 +1828,241 @@
             transform: rotate(90deg);
         }
 
+        /* MSDS章节导航侧边栏 */
+        .msds-nav-sidebar {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 280px;
+            max-height: 80vh;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .msds-nav-sidebar.hidden {
+            transform: translateY(-50%) translateX(-320px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .msds-nav-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .msds-nav-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .msds-nav-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .msds-nav-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .msds-nav-list {
+            max-height: calc(80vh - 60px);
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .msds-nav-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .msds-nav-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .msds-nav-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .msds-nav-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .msds-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            margin: 4px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+            border-left: 3px solid transparent;
+        }
+
+        .msds-nav-item:hover {
+            background: #e0e7ff;
+            border-left-color: #667eea;
+            transform: translateX(2px);
+        }
+
+        .msds-nav-item.active {
+            background: linear-gradient(90deg, #e0e7ff 0%, #f0f4ff 100%);
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        .msds-nav-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+            flex-shrink: 0;
+        }
+
+        .msds-nav-item:hover .msds-nav-number {
+            background: #667eea;
+            color: white;
+        }
+
+        .msds-nav-item.active .msds-nav-number {
+            background: #667eea;
+            color: white;
+        }
+
+        .msds-nav-title {
+            flex: 1;
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.4;
+        }
+
+        /* 全部展开/折叠按钮 */
+        .msds-controls {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding: 12px 0;
+        }
+
+        .msds-expand-all-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .msds-expand-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .msds-expand-all-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 章节高亮动画 */
+        @keyframes highlight {
+            0%, 100% {
+                background-color: transparent;
+            }
+            50% {
+                background-color: rgba(102, 126, 234, 0.1);
+            }
+        }
+
+        /* MSDS导航打开按钮（当侧边栏隐藏时显示） */
+        .msds-nav-open-btn {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            z-index: 999;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .msds-nav-open-btn.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .msds-nav-open-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+        }
+
+        .msds-nav-open-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
         /* 响应式设计 */
         @media (max-width: 768px) {
+            .msds-nav-sidebar {
+                display: none;
+            }
+            
+            .msds-nav-open-btn {
+                display: none;
+            }
+            
+            .msds-controls {
+                justify-content: center;
+            }
             .header h1 {
                 font-size: 1.8em;
             }
@@ -1649,11 +2114,34 @@
 
             .pdf-viewer-controls {
                 padding: 10px;
+                gap: 8px;
             }
 
             .pdf-control-btn {
                 padding: 6px 12px;
                 font-size: 12px;
+            }
+            
+            .pdf-page-jump {
+                padding: 4px 8px;
+            }
+            
+            .pdf-page-jump input {
+                width: 50px;
+            }
+            
+            .pdf-search-box {
+                flex-wrap: wrap;
+                padding: 4px 8px;
+            }
+            
+            .pdf-search-box input {
+                width: 150px;
+                font-size: 12px;
+            }
+            
+            .pdf-search-results {
+                font-size: 11px;
             }
 
             .pdf-sidebar {
@@ -1680,6 +2168,34 @@
 
             .pdf-sidebar-toggle:hover {
                 transform: translateX(-50%) translateY(-3px);
+            }
+
+            /* 法规区域移动端样式 */
+            .regulations-section {
+                padding: 15px;
+                margin-top: 15px;
+            }
+
+            .regulations-title {
+                font-size: 18px;
+                flex-wrap: wrap;
+            }
+
+            .regulation-items {
+                grid-template-columns: 1fr;
+                padding: 8px;
+            }
+
+            .regulation-item {
+                padding: 12px;
+            }
+
+            .regulation-item-name {
+                font-size: 13px;
+            }
+
+            .regulation-item-reason {
+                font-size: 11px;
             }
 
             .pdf-sidebar-content {
@@ -1817,6 +2333,23 @@
                     第 <span id="currentPage">1</span> / <span id="totalPages">1</span> 页
                 </span>
                 <button class="pdf-control-btn" onclick="nextPage()" id="nextBtn">下一页 <i class="fas fa-chevron-right"></i></button>
+                
+                <!-- 页数跳转 -->
+                <div class="pdf-page-jump">
+                    <span>跳转到:</span>
+                    <input type="number" id="pageJumpInput" min="1" placeholder="页码" onkeypress="handlePageJumpEnter(event)">
+                    <button onclick="jumpToPage()"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                
+                <!-- 搜索框 -->
+                <div class="pdf-search-box">
+                    <input type="text" id="pdfSearchInput" placeholder="搜索文本..." onkeypress="handleSearchEnter(event)">
+                    <button onclick="searchInPdf()" id="searchBtn"><i class="fas fa-search"></i></button>
+                    <button onclick="findNext()" id="nextMatchBtn" disabled><i class="fas fa-chevron-down"></i></button>
+                    <button onclick="findPrevious()" id="prevMatchBtn" disabled><i class="fas fa-chevron-up"></i></button>
+                </div>
+                <div class="pdf-search-results" id="searchResults"></div>
+                
                 <button class="pdf-control-btn" onclick="zoomOut()"><i class="fas fa-search-minus"></i> 缩小</button>
                 <button class="pdf-control-btn" onclick="zoomIn()"><i class="fas fa-search-plus"></i> 放大</button>
             </div>
@@ -1827,17 +2360,17 @@
                 </div>
             </div>
             
-            <!-- PDF搜索结果侧边栏 - 移到容器外，不受内容滚动影响 -->
+            <!-- PDF智能匹配侧边栏 - 移到容器外，不受内容滚动影响 -->
             <div class="pdf-sidebar" id="pdfSidebar">
-                <button class="pdf-sidebar-toggle" onclick="togglePdfSidebar()" title="显示/隐藏搜索结果">
+                <button class="pdf-sidebar-toggle" onclick="togglePdfSidebar()" title="显示/隐藏智能匹配">
                     <i class="fas fa-list-ul"></i>
                 </button>
                 <div class="pdf-sidebar-header">
-                    <span>搜索结果 (<span id="resultCount">0</span>)</span>
+                    <span>智能匹配 (<span id="resultCount">0</span>)</span>
                     <button class="pdf-sidebar-close" onclick="togglePdfSidebar()">×</button>
                 </div>
                 <div class="pdf-sidebar-content" id="pdfSidebarContent">
-                    <div class="no-results">暂无搜索结果</div>
+                    <div class="no-results">暂无匹配结果</div>
                 </div>
             </div>
         </div>
@@ -2193,6 +2726,13 @@
                         </div>
                         ` : ''}
                         
+                        <div class="msds-controls">
+                            <button class="msds-expand-all-btn" onclick="toggleAllChapters()">
+                                <i class="fas fa-expand-alt"></i>
+                                <span id="expandBtnText">全部展开</span>
+                            </button>
+                        </div>
+                        
                         <div class="chapters-list">
                 `;
 
@@ -2231,7 +2771,7 @@
                     }
                     
                     html += `
-                        <div class="chapter-item">
+                        <div class="chapter-item" id="chapter-${chapter.章节序号}" data-chapter-number="${chapter.章节序号}">
                             <div class="chapter-header" onclick="toggleChapter(this)">
                                 <div class="chapter-title-wrapper">
                                     <div class="chapter-number">${chapter.章节序号}</div>
@@ -2254,7 +2794,29 @@
                 `;
             }
 
+            // 添加相关法规区域
+            html += `
+                <div class="regulations-section" id="regulationsSection">
+                    <h2 class="regulations-title">
+                        <i class="fas fa-balance-scale"></i> 相关法律法规
+                        <span class="regulations-count" id="regulationsCount">加载中...</span>
+                    </h2>
+                    <div class="regulations-loading" id="regulationsLoading">
+                        <i class="fas fa-spinner fa-spin"></i> 正在加载法规信息...
+                    </div>
+                    <div class="regulations-container" id="regulationsContainer"></div>
+                </div>
+            `;
+
             document.getElementById('resultsSection').innerHTML = html;
+            
+            // 异步加载法规信息
+            loadRegulations(basic.编号);
+            
+            // 创建MSDS导航侧边栏
+            if (chapters && chapters.length > 0) {
+                createMSDSNavSidebar(chapters);
+            }
         }
 
         function toggleChapter(headerElement) {
@@ -4050,6 +4612,143 @@
             showNotification(`正在查询"${chemicalName}"的相关法规...`, 'info');
         }
 
+        // 加载相关法规
+        async function loadRegulations(chemicalId) {
+            const loadingEl = document.getElementById('regulationsLoading');
+            const containerEl = document.getElementById('regulationsContainer');
+            const countEl = document.getElementById('regulationsCount');
+            
+            try {
+                const response = await fetch(`/api/regulations/${chemicalId}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // 隐藏加载提示
+                loadingEl.style.display = 'none';
+                
+                // 更新法规数量
+                countEl.textContent = `(${data.total}项)`;
+                countEl.style.color = '#667eea';
+                
+                // 渲染法规列表
+                renderRegulations(data.by_category, containerEl);
+                
+            } catch (error) {
+                loadingEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> 加载失败: ${error.message}`;
+                loadingEl.style.color = '#ef4444';
+            }
+        }
+
+        // 渲染法规列表
+        function renderRegulations(byCategory, container) {
+            let html = '';
+            
+            // 按分类显示
+            const categoryOrder = ['法规名录', 'GHS标准', '运输标准', '理化测试标准', '毒理测试标准', '环保标准', '通用法规', '内容推荐', '国家标准', '行业标准', '法律法规', '团体标准'];
+            const categoryIcons = {
+                '法规名录': 'fa-list-alt',
+                'GHS标准': 'fa-flask',
+                '运输标准': 'fa-truck',
+                '理化测试标准': 'fa-thermometer-half',
+                '毒理测试标准': 'fa-skull-crossbones',
+                '环保标准': 'fa-leaf',
+                '通用法规': 'fa-book',
+                '内容推荐': 'fa-lightbulb',
+                '国家标准': 'fa-flag',
+                '行业标准': 'fa-industry',
+                '法律法规': 'fa-gavel',
+                '团体标准': 'fa-users'
+            };
+            
+            categoryOrder.forEach(category => {
+                if (byCategory[category] && byCategory[category].length > 0) {
+                    const regulations = byCategory[category];
+                    const icon = categoryIcons[category] || 'fa-file-alt';
+                    
+                    html += `
+                        <div class="regulation-category">
+                            <div class="regulation-category-header">
+                                <i class="fas ${icon}"></i>
+                                <span class="regulation-category-title">${category}</span>
+                                <span class="regulation-category-count">${regulations.length}项</span>
+                            </div>
+                            <div class="regulation-items">
+                    `;
+                    
+                    regulations.forEach(reg => {
+                        // 转义单引号，防止JavaScript错误
+                        const safeFile = reg.file.replace(/'/g, "\\'");
+                        const safeName = reg.name.replace(/'/g, "\\'");
+                        
+                        html += `
+                            <div class="regulation-item" onclick="openRegulationPDF('${safeFile}', '${safeName}')">
+                                <div class="regulation-item-header">
+                                    <i class="fas fa-file-pdf regulation-item-icon"></i>
+                                    <span class="regulation-item-name">${reg.name}</span>
+                                </div>
+                                <div class="regulation-item-reason">${reg.reason}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (html === '') {
+                html = '<div class="no-regulations"><i class="fas fa-info-circle"></i> 暂无匹配的法规信息</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 打开法规PDF文件
+        async function openRegulationPDF(filepath, name) {
+            try {
+                showNotification(`正在加载法规文件: ${name}`, 'info');
+                
+                // 构建PDF URL
+                const pdfUrl = `/regulation-pdf/${encodeURIComponent(filepath)}`;
+                
+                // 记录当前PDF文件名（用于缓存）
+                currentPdfFileName = `regulation_${filepath}`;
+                
+                // 加载PDF（配置CMap支持中文）
+                const loadingTask = pdfjsLib.getDocument({
+                    url: pdfUrl,
+                    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+                    cMapPacked: true
+                });
+                pdfDoc = await loadingTask.promise;
+                totalPagesCount = pdfDoc.numPages;
+                
+                // 清空搜索关键词
+                currentSearchKeyword = '';
+                
+                // 更新标题和页码信息
+                document.getElementById('pdfViewerTitle').textContent = name;
+                document.getElementById('totalPages').textContent = totalPagesCount;
+                
+                // 始终显示第1页
+                currentPageNum = 1;
+                await renderPage(currentPageNum);
+                
+                // 显示查看器
+                document.getElementById('pdfViewerOverlay').classList.add('show');
+                showNotification(`法规文件加载成功: ${name}`, 'success');
+                
+            } catch (error) {
+                console.error('法规PDF加载失败:', error);
+                showNotification('法规PDF加载失败：' + error.message, 'error');
+            }
+        }
+
         // 显示删除确认对话框
         function showDeleteConfirm(chemicalId, chemicalName, casNumber, callback) {
             currentChemicalId = chemicalId;
@@ -4217,6 +4916,22 @@
                 // 更新标题和页码信息
                 document.getElementById('pdfViewerTitle').textContent = title;
                 document.getElementById('totalPages').textContent = totalPagesCount;
+                
+                // 更新页数跳转输入框的最大值
+                const pageJumpInput = document.getElementById('pageJumpInput');
+                if (pageJumpInput) {
+                    pageJumpInput.max = totalPagesCount;
+                    pageJumpInput.value = '';
+                }
+                
+                // 清除之前的搜索状态
+                searchMatches = [];
+                currentMatchIndex = -1;
+                currentSearchText = '';
+                document.getElementById('pdfSearchInput').value = '';
+                document.getElementById('searchResults').textContent = '';
+                document.getElementById('nextMatchBtn').disabled = true;
+                document.getElementById('prevMatchBtn').disabled = true;
                 
                 // 始终显示第1页，不自动跳转
                 currentPageNum = 1;
@@ -4481,7 +5196,7 @@
                 countSpan.textContent = searchResults.length;
                 
                 if (searchResults.length === 0) {
-                    content.innerHTML = '<div class="no-results">暂无搜索结果</div>';
+                    content.innerHTML = '<div class="no-results">暂无匹配结果</div>';
                     return;
                 }
                 
@@ -4737,6 +5452,210 @@
             await renderPage(currentPageNum);
         }
         
+        // 页数跳转功能
+        function jumpToPage() {
+            const input = document.getElementById('pageJumpInput');
+            const pageNum = parseInt(input.value);
+            
+            if (!pageNum || pageNum < 1 || pageNum > totalPagesCount) {
+                alert(`请输入有效的页码（1-${totalPagesCount}）`);
+                return;
+            }
+            
+            currentPageNum = pageNum;
+            renderPage(currentPageNum);
+            input.value = ''; // 清空输入框
+        }
+        
+        // 回车跳转页码
+        function handlePageJumpEnter(event) {
+            if (event.key === 'Enter') {
+                jumpToPage();
+            }
+        }
+        
+        // PDF搜索相关变量
+        let searchMatches = [];
+        let currentMatchIndex = -1;
+        let currentSearchText = '';
+        
+        // 搜索PDF文本
+        async function searchInPdf() {
+            const searchInput = document.getElementById('pdfSearchInput');
+            const searchText = searchInput.value.trim();
+            
+            if (!searchText) {
+                alert('请输入搜索内容');
+                return;
+            }
+            
+            if (!pdfDoc) {
+                alert('请先打开PDF文件');
+                return;
+            }
+            
+            // 清除之前的搜索结果
+            clearSearchHighlights();
+            searchMatches = [];
+            currentMatchIndex = -1;
+            currentSearchText = searchText;
+            
+            // 显示搜索中
+            document.getElementById('searchResults').textContent = '搜索中...';
+            
+            // 在所有页面中搜索
+            for (let pageNum = 1; pageNum <= totalPagesCount; pageNum++) {
+                const page = await pdfDoc.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                
+                // 查找匹配项
+                const regex = new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                let match;
+                while ((match = regex.exec(pageText)) !== null) {
+                    searchMatches.push({
+                        pageNum: pageNum,
+                        index: match.index
+                    });
+                }
+            }
+            
+            // 显示搜索结果
+            const resultsDiv = document.getElementById('searchResults');
+            if (searchMatches.length > 0) {
+                resultsDiv.textContent = `找到 ${searchMatches.length} 个匹配项`;
+                currentMatchIndex = 0;
+                // 跳转到第一个匹配项
+                await goToMatch(0);
+                // 启用导航按钮
+                document.getElementById('nextMatchBtn').disabled = false;
+                document.getElementById('prevMatchBtn').disabled = false;
+            } else {
+                resultsDiv.textContent = '未找到匹配项';
+                document.getElementById('nextMatchBtn').disabled = true;
+                document.getElementById('prevMatchBtn').disabled = true;
+            }
+        }
+        
+        // 跳转到指定匹配项
+        async function goToMatch(index) {
+            if (searchMatches.length === 0) return;
+            
+            currentMatchIndex = index;
+            const match = searchMatches[index];
+            
+            // 跳转到对应页面
+            if (currentPageNum !== match.pageNum) {
+                currentPageNum = match.pageNum;
+                await renderPage(currentPageNum);
+            }
+            
+            // 高亮当前匹配项
+            highlightSearchText();
+            
+            // 更新搜索结果显示
+            document.getElementById('searchResults').textContent = 
+                `第 ${currentMatchIndex + 1}/${searchMatches.length} 个匹配项`;
+        }
+        
+        // 下一个匹配项
+        async function findNext() {
+            if (searchMatches.length === 0) return;
+            
+            const nextIndex = (currentMatchIndex + 1) % searchMatches.length;
+            await goToMatch(nextIndex);
+        }
+        
+        // 上一个匹配项
+        async function findPrevious() {
+            if (searchMatches.length === 0) return;
+            
+            const prevIndex = currentMatchIndex === 0 ? 
+                searchMatches.length - 1 : currentMatchIndex - 1;
+            await goToMatch(prevIndex);
+        }
+        
+        // 高亮搜索文本
+        function highlightSearchText() {
+            if (!currentSearchText) return;
+            
+            const textLayer = document.getElementById('textLayer');
+            if (!textLayer) return;
+            
+            // 移除之前的高亮
+            const oldHighlights = textLayer.querySelectorAll('.search-highlight');
+            oldHighlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+            
+            // 高亮当前页面的匹配文本
+            const walker = document.createTreeWalker(
+                textLayer,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            const nodesToReplace = [];
+            let node;
+            
+            while (node = walker.nextNode()) {
+                const text = node.nodeValue;
+                const regex = new RegExp(currentSearchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                
+                if (regex.test(text)) {
+                    nodesToReplace.push(node);
+                }
+            }
+            
+            nodesToReplace.forEach(node => {
+                const text = node.nodeValue;
+                const regex = new RegExp(
+                    `(${currentSearchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+                    'gi'
+                );
+                const parts = text.split(regex);
+                
+                const fragment = document.createDocumentFragment();
+                parts.forEach((part, i) => {
+                    if (i % 2 === 1) {
+                        const span = document.createElement('span');
+                        span.className = 'search-highlight';
+                        span.style.backgroundColor = 'yellow';
+                        span.style.color = 'black';
+                        span.textContent = part;
+                        fragment.appendChild(span);
+                    } else if (part) {
+                        fragment.appendChild(document.createTextNode(part));
+                    }
+                });
+                
+                node.parentNode.replaceChild(fragment, node);
+            });
+        }
+        
+        // 清除搜索高亮
+        function clearSearchHighlights() {
+            const textLayer = document.getElementById('textLayer');
+            if (!textLayer) return;
+            
+            const highlights = textLayer.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+        
+        // 回车搜索
+        function handleSearchEnter(event) {
+            if (event.key === 'Enter') {
+                searchInPdf();
+            }
+        }
+        
         // 关闭PDF查看器
         function closePdfViewer() {
             document.getElementById('pdfViewerOverlay').classList.remove('show');
@@ -4745,13 +5664,220 @@
             totalPagesCount = 0;
             currentScale = 1.5;
             currentSearchKeyword = ''; // 清除搜索关键词
+            
+            // 清除搜索状态
+            searchMatches = [];
+            currentMatchIndex = -1;
+            currentSearchText = '';
+            document.getElementById('pdfSearchInput').value = '';
+            document.getElementById('searchResults').textContent = '';
+            document.getElementById('nextMatchBtn').disabled = true;
+            document.getElementById('prevMatchBtn').disabled = true;
+            clearSearchHighlights();
             searchResults = []; // 清空搜索结果
             
             // 关闭并清空侧边栏
             const sidebar = document.getElementById('pdfSidebar');
             sidebar.classList.remove('show');
-            document.getElementById('pdfSidebarContent').innerHTML = '<div class="no-results">暂无搜索结果</div>';
+            document.getElementById('pdfSidebarContent').innerHTML = '<div class="no-results">暂无匹配结果</div>';
             document.getElementById('resultCount').textContent = '0';
+        }
+
+        // ========== MSDS章节导航侧边栏功能 ==========
+        
+        let msdsNavSidebar = null;
+        let msdsNavOpenBtn = null;
+        let currentAllExpanded = false;
+        
+        // 创建MSDS导航侧边栏
+        function createMSDSNavSidebar(chapters) {
+            // 如果侧边栏已存在，只更新内容
+            if (msdsNavSidebar) {
+                const navList = msdsNavSidebar.querySelector('#msdsNavList');
+                navList.innerHTML = ''; // 清空旧内容
+                
+                // 添加新章节
+                chapters.forEach(chapter => {
+                    const navItem = document.createElement('div');
+                    navItem.className = 'msds-nav-item';
+                    navItem.setAttribute('data-chapter', chapter.章节序号);
+                    navItem.onclick = () => scrollToChapter(chapter.章节序号);
+                    navItem.innerHTML = `
+                        <div class="msds-nav-number">${chapter.章节序号}</div>
+                        <div class="msds-nav-title">${chapter.章节标题}</div>
+                    `;
+                    navList.appendChild(navItem);
+                });
+                
+                // 显示侧边栏
+                msdsNavSidebar.classList.remove('hidden');
+                if (msdsNavOpenBtn) {
+                    msdsNavOpenBtn.classList.remove('show');
+                }
+                return;
+            }
+            
+            // 创建新侧边栏（第一次）
+            msdsNavSidebar = document.createElement('div');
+            msdsNavSidebar.className = 'msds-nav-sidebar';
+            msdsNavSidebar.innerHTML = `
+                <div class="msds-nav-header">
+                    <h3>
+                        <i class="fas fa-list-ul"></i>
+                        章节导航
+                    </h3>
+                    <button class="msds-nav-toggle" onclick="toggleMSDSNav()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="msds-nav-list" id="msdsNavList"></div>
+            `;
+            
+            // 添加章节导航项
+            const navList = msdsNavSidebar.querySelector('#msdsNavList');
+            chapters.forEach(chapter => {
+                const navItem = document.createElement('div');
+                navItem.className = 'msds-nav-item';
+                navItem.setAttribute('data-chapter', chapter.章节序号);
+                navItem.onclick = () => scrollToChapter(chapter.章节序号);
+                navItem.innerHTML = `
+                    <div class="msds-nav-number">${chapter.章节序号}</div>
+                    <div class="msds-nav-title">${chapter.章节标题}</div>
+                `;
+                navList.appendChild(navItem);
+            });
+            
+            document.body.appendChild(msdsNavSidebar);
+            
+            // 创建打开按钮（第一次）
+            if (!msdsNavOpenBtn) {
+                msdsNavOpenBtn = document.createElement('button');
+                msdsNavOpenBtn.className = 'msds-nav-open-btn';
+                msdsNavOpenBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                msdsNavOpenBtn.onclick = toggleMSDSNav;
+                msdsNavOpenBtn.title = '打开章节导航';
+                document.body.appendChild(msdsNavOpenBtn);
+            }
+            
+            // 监听滚动，高亮当前章节
+            setupScrollListener();
+        }
+        
+        // 切换侧边栏显示/隐藏
+        function toggleMSDSNav() {
+            if (msdsNavSidebar) {
+                const isHidden = msdsNavSidebar.classList.toggle('hidden');
+                
+                // 同步显示/隐藏打开按钮
+                if (msdsNavOpenBtn) {
+                    if (isHidden) {
+                        msdsNavOpenBtn.classList.add('show');
+                    } else {
+                        msdsNavOpenBtn.classList.remove('show');
+                    }
+                }
+            }
+        }
+        
+        // 滚动到指定章节
+        function scrollToChapter(chapterNumber) {
+            const chapterElement = document.getElementById(`chapter-${chapterNumber}`);
+            if (chapterElement) {
+                // 平滑滚动到章节
+                chapterElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // 切换章节的展开/关闭状态
+                const header = chapterElement.querySelector('.chapter-header');
+                if (header) {
+                    toggleChapter(header);
+                }
+                
+                // 高亮章节（添加闪烁效果）
+                chapterElement.style.animation = 'highlight 1s';
+                setTimeout(() => {
+                    chapterElement.style.animation = '';
+                }, 1000);
+                
+                // 更新导航项激活状态
+                updateActiveNavItem(chapterNumber);
+            }
+        }
+        
+        // 更新导航项激活状态
+        function updateActiveNavItem(chapterNumber) {
+            if (!msdsNavSidebar) return;
+            
+            const navItems = msdsNavSidebar.querySelectorAll('.msds-nav-item');
+            navItems.forEach(item => {
+                if (parseInt(item.getAttribute('data-chapter')) === chapterNumber) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // 设置滚动监听器
+        function setupScrollListener() {
+            let ticking = false;
+            
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(() => {
+                        updateActiveNavItemOnScroll();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+        }
+        
+        // 根据滚动位置更新激活的导航项
+        function updateActiveNavItemOnScroll() {
+            const chapterItems = document.querySelectorAll('.chapter-item');
+            if (!chapterItems.length) return;
+            
+            let activeChapter = null;
+            const scrollPos = window.scrollY + 100; // 偏移量
+            
+            chapterItems.forEach(item => {
+                const rect = item.getBoundingClientRect();
+                const itemTop = window.scrollY + rect.top;
+                
+                if (itemTop <= scrollPos) {
+                    activeChapter = parseInt(item.getAttribute('data-chapter-number'));
+                }
+            });
+            
+            if (activeChapter !== null) {
+                updateActiveNavItem(activeChapter);
+            }
+        }
+        
+        // 全部展开/折叠章节
+        function toggleAllChapters() {
+            const chapterItems = document.querySelectorAll('.chapter-item');
+            const btnText = document.getElementById('expandBtnText');
+            const btnIcon = document.querySelector('.msds-expand-all-btn i');
+            
+            currentAllExpanded = !currentAllExpanded;
+            
+            chapterItems.forEach(item => {
+                if (currentAllExpanded) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // 更新按钮文本和图标
+            if (currentAllExpanded) {
+                btnText.textContent = '全部折叠';
+                btnIcon.className = 'fas fa-compress-alt';
+            } else {
+                btnText.textContent = '全部展开';
+                btnIcon.className = 'fas fa-expand-alt';
+            }
         }
         
         // ESC键关闭PDF查看器

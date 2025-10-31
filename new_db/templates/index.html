@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>危化品MSDS查询系统</title>
+    <title>易链危化品智能查询系统</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚗️</text></svg>">
     <style>
         * {
@@ -579,6 +579,9 @@
             margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 3px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .msds-meta {
@@ -1981,21 +1984,28 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+            flex-shrink: 0;
         }
 
         .msds-expand-all-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 14px rgba(102, 126, 234, 0.4);
+        }
+
+        .msds-title-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .msds-expand-all-btn:active {
@@ -2063,6 +2073,18 @@
             .msds-controls {
                 justify-content: center;
             }
+            
+            .msds-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .msds-expand-all-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
             .header h1 {
                 font-size: 1.8em;
             }
@@ -2378,7 +2400,7 @@
 
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-flask"></i> 危化品MSDS查询系统</h1>
+            <h1><i class="fas fa-flask"></i> 易链危化品智能查询系统</h1>
             <p>专业化学品安全数据查询平台</p>
         </div>
 
@@ -2717,7 +2739,15 @@
             if (chapters && chapters.length > 0) {
                 html += `
                     <div class="msds-section">
-                        <h2 class="msds-title"><i class="fas fa-clipboard-list"></i> MSDS安全技术说明书</h2>
+                        <h2 class="msds-title">
+                            <span class="msds-title-text">
+                                <i class="fas fa-clipboard-list"></i> MSDS安全技术说明书
+                            </span>
+                            <button class="msds-expand-all-btn" onclick="toggleAllChapters()">
+                                <i class="fas fa-expand-alt"></i>
+                                <span id="expandBtnText">全部展开</span>
+                            </button>
+                        </h2>
                         ${chapters[0].编制单位 || chapters[0].编制依据 ? `
                         <div class="msds-meta">
                             ${chapters[0].编制单位 ? `<i class="fas fa-building"></i> 编制单位：${chapters[0].编制单位}` : ''}
@@ -2725,13 +2755,6 @@
                             ${chapters[0].编制日期 ? ` | <i class="fas fa-calendar-alt"></i> 编制日期：${chapters[0].编制日期}` : ''}
                         </div>
                         ` : ''}
-                        
-                        <div class="msds-controls">
-                            <button class="msds-expand-all-btn" onclick="toggleAllChapters()">
-                                <i class="fas fa-expand-alt"></i>
-                                <span id="expandBtnText">全部展开</span>
-                            </button>
-                        </div>
                         
                         <div class="chapters-list">
                 `;
@@ -4597,19 +4620,50 @@
             search();
         }
 
-        // 查询化学品法规
+        // 查询化学品法规（两步跳转：先建立Session，再查询）
         function queryRegulation(chemicalName) {
             // 对化学品名称进行URL编码
             const encodedName = encodeURIComponent(chemicalName);
             
-            // 构建法规查询网站URL
+            // 首页URL（用于建立Session）
+            const homeUrl = 'https://law.chemicalsafety.org.cn/';
+            
+            // 构建法规查询URL
             const regulationUrl = `https://law.chemicalsafety.org.cn/compliance/guild/customer/SearchAllCustomer.jsp?moduleId=2&type=all&keyContent=${encodedName}`;
             
-            // 在新窗口打开法规查询页面
-            window.open(regulationUrl, '_blank');
-            
             // 显示提示信息
-            showNotification(`正在查询"${chemicalName}"的相关法规...`, 'info');
+            showNotification(`正在打开法规查询网站...`, 'info', 3000);
+            
+            // 方案：先打开首页建立Session，然后自动跳转到查询页面
+            const newWindow = window.open(homeUrl, '_blank');
+            
+            if (newWindow) {
+                // 等待首页加载完成后（1.5秒），自动跳转到查询页面
+                setTimeout(() => {
+                    try {
+                        newWindow.location.href = regulationUrl;
+                        showNotification(`正在查询"${chemicalName}"的相关法规...`, 'info');
+                    } catch (e) {
+                        // 如果跨域限制，提供备用方案
+                        console.log('自动跳转失败，使用备用方案');
+                        // 关闭首页窗口，直接打开查询页面
+                        newWindow.close();
+                        window.open(regulationUrl, '_blank');
+                        showNotification(`如遇到登录提示，请刷新页面后重试`, 'warning', 5000);
+                    }
+                }, 1500);
+            } else {
+                // 如果弹窗被阻止，提示用户
+                showNotification('请允许浏览器弹窗，然后重试', 'warning', 5000);
+            }
+        }
+        
+        // 备用方案：直接查询法规（保留旧方法）
+        function queryRegulationDirect(chemicalName) {
+            const encodedName = encodeURIComponent(chemicalName);
+            const regulationUrl = `https://law.chemicalsafety.org.cn/compliance/guild/customer/SearchAllCustomer.jsp?moduleId=2&type=all&keyContent=${encodedName}`;
+            window.open(regulationUrl, '_blank');
+            showNotification(`正在查询"${chemicalName}"的相关法规...（如遇登录提示请刷新）`, 'warning', 5000);
         }
 
         // 加载相关法规

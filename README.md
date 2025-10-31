@@ -775,7 +775,7 @@ self.index = {
 
 #### 5.3 关键实现步骤
 
-**步骤1：保存化学品信息** (`index.html` 2672-2677行)
+**步骤1：保存化学品信息** (`index.html` 2695-2699行)
 
 当用户搜索到化学品后，系统立即保存化学品信息到全局变量：
 
@@ -788,7 +788,7 @@ currentChemicalInfo = {
 };
 ```
 
-**全局变量定义** (`index.html` 4850-4855行)：
+**全局变量定义** (`index.html` 4905-4909行)：
 ```javascript
 let currentChemicalInfo = {
     cas: '',
@@ -797,7 +797,7 @@ let currentChemicalInfo = {
 };
 ```
 
-**步骤2：渲染可点击的法规链接** (`index.html` 4093-4100行)
+**步骤2：渲染可点击的法规链接** (`index.html` 4120-4123行)
 
 在第15章中，将法规名称渲染为可点击链接：
 
@@ -816,7 +816,7 @@ html += `<div class="msds-field-label regulation-link"
 - 鼠标悬停显示提示："点击查看PDF文件并自动搜索该化学品（含别名）"
 - 点击触发 `openPdfViewerWithSearch()` 函数
 
-**步骤3：打开PDF并准备搜索关键词** (`index.html` 4871-4892行)
+**步骤3：打开PDF并准备搜索关键词** (`index.html` 4925-4946行)
 
 ```javascript
 async function openPdfViewerWithSearch(pdfFileName, title = '法规文件') {
@@ -853,7 +853,7 @@ keywordGroups = {
 }
 ```
 
-**步骤4：加载PDF并异步搜索** (`index.html` 4894-4949行)
+**步骤4：加载PDF并异步搜索** (`index.html` 4949-5009行)
 
 ```javascript
 async function openPdfViewer(pdfFileName, pageNumber = 1, title = '法规文件', searchKeyword = '') {
@@ -897,7 +897,7 @@ async function openPdfViewer(pdfFileName, pageNumber = 1, title = '法规文件'
 - 搜索在后台异步执行
 - 用户可以立即浏览PDF，同时系统在后台搜索
 
-**步骤5：智能搜索算法** (`index.html` 5056-5200行)
+**步骤5：智能搜索算法** (`index.html` 5110-5200行)
 
 ```javascript
 async function searchInPdf(keywords) {
@@ -1049,12 +1049,12 @@ async function searchInPdf(keywords) {
 
 | 功能模块 | 文件 | 行数 | 说明 |
 |---------|------|------|------|
-| 全局变量定义 | `index.html` | 4850-4855 | 定义 `currentChemicalInfo` |
-| 保存化学品信息 | `index.html` | 2672-2677 | 搜索结果展示时保存 |
-| 渲染可点击链接 | `index.html` | 4093-4100 | 第15章法规链接渲染 |
-| 打开PDF入口 | `index.html` | 4871-4892 | `openPdfViewerWithSearch()` |
-| PDF加载函数 | `index.html` | 4894-4949 | `openPdfViewer()` |
-| 智能搜索算法 | `index.html` | 5056-5200 | `searchInPdf()` |
+| 全局变量定义 | `index.html` | 4905-4909 | 定义 `currentChemicalInfo` |
+| 保存化学品信息 | `index.html` | 2695-2699 | 搜索结果展示时保存 |
+| 渲染可点击链接 | `index.html` | 4120-4123 | 第15章法规链接渲染 |
+| 打开PDF入口 | `index.html` | 4925-4946 | `openPdfViewerWithSearch()` |
+| PDF加载函数 | `index.html` | 4949-5009 | `openPdfViewer()` |
+| 智能搜索算法 | `index.html` | 5110-5200 | `searchInPdf()` |
 
 #### 5.6 技术亮点
 
@@ -1081,6 +1081,115 @@ async function searchInPdf(keywords) {
    - 兼容旧格式搜索
    - 支持中文PDF（CMap配置）
    - 避免重复搜索同一组
+
+#### 5.7 重要问题修复：函数名冲突
+
+**问题描述：**
+
+系统中存在两个同名的 `searchInPdf` 函数，导致自动搜索功能失效：
+
+1. **第5110行**：自动搜索化学品函数
+   ```javascript
+   async function searchInPdf(keywords) {
+       // 智能搜索：CAS号、名称、别名
+       if (!pdfDoc || !keywords) return 0;
+       // ...
+   }
+   ```
+
+2. **第5537行**：手动搜索文本函数（原版本）
+   ```javascript
+   async function manualSearchInPdf() {
+       // 从输入框读取搜索文本
+       const searchInput = document.getElementById('pdfSearchInput');
+       // ...
+   }
+   ```
+
+**冲突原因：**
+
+在JavaScript中，后定义的函数会覆盖先定义的同名函数。如果存在同名函数冲突，会导致：
+- 第5001行调用 `await searchInPdf(searchKeyword)` 时，可能调用错误的函数版本
+- 无参数版本只从输入框读取文本，不接受传入的关键词参数
+- 自动搜索功能完全失效
+
+**解决方案：**
+
+将手动搜索函数重命名为 `manualSearchInPdf()`，避免命名冲突。
+
+**修改1：重命名手动搜索函数** (`index.html` 5537行)
+```javascript
+// ✅ 修改后
+async function manualSearchInPdf() {
+    const searchInput = document.getElementById('pdfSearchInput');
+    const searchText = searchInput.value.trim();
+    
+    if (!searchText) {
+        alert('请输入搜索内容');
+        return;
+    }
+    // ...
+}
+```
+
+**修改2：更新HTML按钮调用** (`index.html` 2369行)
+```html
+<!-- ✅ 修改后 -->
+<button onclick="manualSearchInPdf()" id="searchBtn">
+    <i class="fas fa-search"></i>
+</button>
+```
+
+**修改3：更新回车键处理** (`index.html` 5709行)
+```javascript
+// ✅ 修改后
+function handleSearchEnter(event) {
+    if (event.key === 'Enter') {
+        manualSearchInPdf();
+    }
+}
+```
+
+**修复后的函数结构：**
+
+| 函数名 | 代码行 | 用途 | 参数 |
+|--------|--------|------|------|
+| `searchInPdf(keywords)` | 5110行 | 自动搜索化学品 | `keywords` 对象（CAS号、名称、别名） |
+| `manualSearchInPdf()` | 5537行 | 手动搜索文本 | 无（从输入框读取） |
+
+**调用关系：**
+
+```
+自动搜索流程：
+  点击法规PDF链接 
+    → openPdfViewerWithSearch()  (4925行)
+    → openPdfViewer()             (4949行)
+    → searchInPdf(keywordGroups)  (5001行调用，5110行定义)
+
+手动搜索流程：
+  输入搜索文本 + 点击按钮/回车
+    → manualSearchInPdf()         (2369行/5709行调用，5537行定义)
+```
+
+**验证方法：**
+
+1. **自动搜索测试**：
+   - 搜索化学品（如"甲醛"）
+   - 查看第15章法规信息
+   - 点击法规PDF链接
+   - ✅ 应自动搜索并跳转到匹配页
+
+2. **手动搜索测试**：
+   - 打开任意PDF
+   - 输入关键词并搜索
+   - ✅ 应显示搜索结果
+
+**经验教训：**
+
+1. 避免函数名重复，特别是在大型单文件应用中
+2. 使用明确的函数命名，如 `manualSearchInPdf` vs `autoSearchInPdf`
+3. 定期检查函数定义，确保无命名冲突
+4. 考虑使用命名空间或模块化来组织代码
 
 ---
 
@@ -1628,11 +1737,23 @@ python scrape_to_json.py "URL" --output my_data
 
 #### 7. 访问PDF文件
 
+系统提供两种PDF文件访问路由：
+
+**A. 法规PDF文件** (`app.py` 938-946行)
+
 **接口：** `GET /regulation-pdf/<path:filepath>`
 
-**代码位置：** `app.py` 938-946行
+**说明：** 用于访问法规PDF文件（来自`化学品法规pdf`文件夹）
 
 **示例：** `GET /regulation-pdf/国家标准/化学品安全技术说明书 内容和项目顺序.pdf`
+
+**B. 普通PDF文件** (`app.py` 948-954行)
+
+**接口：** `GET /pdf/<path:filename>`
+
+**说明：** 用于访问普通PDF文件（来自`pdf`文件夹），PDF查看器使用此路由加载文件
+
+**示例：** `GET /pdf/危险化学品目录.pdf`
 
 ---
 
@@ -1643,11 +1764,11 @@ python scrape_to_json.py "URL" --output my_data
 | 文件 | 行数 | 功能 |
 |------|------|------|
 | `app.py` | 964 | Flask Web应用 |
-| `scrape_to_json.py` | 613 | 爬虫系统 |
+| `scrape_to_json.py` | 612 | 爬虫系统 |
 | `regulation_content_indexer.py` | 244 | 法规索引器 |
-| `init_simple_db.sql` | 167 | 数据库初始化 |
-| `index.html` | 5901 | 前端界面 |
-| **总计** | **7889** | |
+| `init_simple_db.sql` | 166 | 数据库初始化 |
+| `index.html` | 5954 | 前端界面 |
+| **总计** | **7940** | |
 
 ### 数据统计
 
@@ -1657,7 +1778,8 @@ python scrape_to_json.py "URL" --output my_data
 | 法规PDF文件 | 475个 |
 | 法规MD文件 | 474个 |
 | 数据库表 | 4张 |
-| API接口 | 8个 |
+| Flask路由 | 10个（含静态文件服务） |
+| API接口 | 7个（不包括静态文件服务） |
 | 批处理脚本 | 3个 |
 
 ### 法规文档分类
@@ -1731,6 +1853,32 @@ python regulation_content_indexer.py
 2. 文件编码是否为 `UTF-8`
 3. MySQL连接是否指定 `charset='utf8mb4'`
 
+### Q5: 法规查询提示"连接已过期或PASSPORT无效"
+
+**现象：** 点击"法规查询"按钮跳转到外部网站时，显示"对不起，连接已过期或PASSPORT无效，请重新登录！"
+
+**原因：** 
+目标网站 `law.chemicalsafety.org.cn` 使用Session管理机制。直接跳转到深层查询页面时，网站检测到没有有效的Session。
+
+**解决方案：**
+系统已实现**两步跳转**机制（`index.html` 第4624-4659行）：
+1. **第一步**：先打开网站首页建立Session（1.5秒）
+2. **第二步**：自动跳转到化学品查询页面
+3. **容错处理**：如遇跨域限制，自动切换到备用方案
+
+```javascript
+// 核心逻辑
+const newWindow = window.open(homeUrl, '_blank');  // 先访问首页
+setTimeout(() => {
+    newWindow.location.href = regulationUrl;  // 1.5秒后跳转查询
+}, 1500);
+```
+
+**注意事项：**
+- 请允许浏览器弹窗，否则无法打开新窗口
+- 如仍遇到登录提示，可能是网络延迟，等待页面自动刷新即可
+- 备用函数 `queryRegulationDirect()` 可直接跳转（但可能遇到Session问题）
+
 ---
 
 ## 许可证
@@ -1750,6 +1898,11 @@ python regulation_content_indexer.py
 ---
 
 **最后更新**: 2025-10-24  
+**代码行号检查**: 2025-10-24  
 **版本**: 1.0  
 **作者**: Chemical Safety Database Team
+
+---
+
+**注意：**本文档中的代码行号基于2025-10-24的代码版本。如果代码发生更新，行号可能会发生变化。
 

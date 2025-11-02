@@ -2748,8 +2748,13 @@
                                 <span id="expandBtnText">全部展开</span>
                             </button>
                         </h2>
-                        ${chapters[0].编制单位 || chapters[0].编制依据 ? `
-                        <div class="msds-meta">
+                        <!-- ============================================================
+                             暂时隐藏编制信息（编制单位、编制依据、编制日期）
+                             说明：这是临时措施，后续可能会恢复显示
+                             恢复方法：将下面的条件从 false 改为检查编制单位或编制依据是否存在
+                             ============================================================ -->
+                        ${false ? `
+                        <div class="msds-meta" style="display: none;">
                             ${chapters[0].编制单位 ? `<i class="fas fa-building"></i> 编制单位：${chapters[0].编制单位}` : ''}
                             ${chapters[0].编制依据 ? ` | <i class="fas fa-file-alt"></i> 编制依据：${chapters[0].编制依据}` : ''}
                             ${chapters[0].编制日期 ? ` | <i class="fas fa-calendar-alt"></i> 编制日期：${chapters[0].编制日期}` : ''}
@@ -2944,22 +2949,69 @@
 
         // 格式化第一部分：化学品及企业标识
         function formatFirstChapter(text) {
+            /* ============================================================
+               暂时隐藏企业信息功能
+               说明：这是临时措施，后续可能会恢复显示企业信息
+               隐藏的内容包括：
+                 - 安全数据单提供者信息（整个段落）
+                 - 企业名称、企业地址、邮编、传真、联系电话、电子邮件地址、企业应急电话
+               恢复方法：
+                 1. 将 hiddenLabels 数组中的字段移回 labels 数组
+                 2. 将 '安全数据单提供者信息' 添加回 sections 数组
+                 3. 删除隐藏逻辑（shouldHide 检查和隐藏段落逻辑）
+               ============================================================ */
+            
             const lines = text.split('\n').map(line => line.trim()).filter(line => line);
             let html = '<div class="chapter-text-formatted">';
             let currentSection = '';
             
-            // 定义需要高亮的标签
+            // 定义需要高亮的标签（已暂时隐藏企业信息相关字段）
             const labels = [
                 '产品中文名称', '产品英文名称', '别名', 'CAS NO.', 'EC NO.', '分子式',
-                '产品的推荐用途', '产品的限制用途',
-                '企业名称', '企业地址', '邮编', '传真', '联系电话', '电子邮件地址', '企业应急电话'
+                '产品的推荐用途', '产品的限制用途'
+                // 已暂时隐藏：'企业名称', '企业地址', '邮编', '传真', '联系电话', '电子邮件地址', '企业应急电话'
             ];
             
-            // 定义段落标题
-            const sections = ['产品标识', '产品推荐和限制用途', '安全数据单提供者信息'];
+            // 定义需要暂时隐藏的企业信息标签（后续可能恢复）
+            const hiddenLabels = [
+                '企业名称', '企业地址', '邮编', '传真', '联系电话', '电子邮件地址', '企业应急电话',
+                '安全数据单提供者信息'  // 隐藏整个段落标题
+            ];
+            
+            // 定义段落标题（已暂时隐藏"安全数据单提供者信息"）
+            const sections = ['产品标识', '产品推荐和限制用途'];
             
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
+                
+                // 检查是否是需要隐藏的标签
+                let shouldHide = false;
+                for (const hiddenLabel of hiddenLabels) {
+                    if (line.startsWith(hiddenLabel) || line === hiddenLabel) {
+                        shouldHide = true;
+                        break;
+                    }
+                }
+                
+                // 暂时隐藏"安全数据单提供者信息"段落及其所有内容（后续可能恢复）
+                if (line === '安全数据单提供者信息') {
+                    // 跳过这个段落标题及其后续内容，直到遇到下一个段落标题或文件结束
+                    while (i < lines.length - 1) {
+                        i++;
+                        const nextLine = lines[i];
+                        // 如果遇到下一个段落标题，回退一步以便下次循环处理
+                        if (sections.includes(nextLine)) {
+                            i--;
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                
+                // 暂时隐藏企业信息字段（后续可能恢复）
+                if (shouldHide) {
+                    continue;
+                }
                 
                 // 检查是否是段落标题
                 if (sections.includes(line)) {

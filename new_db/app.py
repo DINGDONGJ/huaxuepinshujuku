@@ -10,6 +10,7 @@ from decimal import Decimal
 from datetime import datetime
 import os
 from regulation_content_indexer import RegulationContentIndexer
+from ai_analyzer import analyze_compatibility_with_ai, extract_chapter_summary
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 限制上传文件大小为16MB
@@ -279,21 +280,38 @@ def search():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # 查找化学品
+        # 优先精确匹配
         cursor.execute("""
             SELECT 编号 FROM 化学品 
-            WHERE 中文名 LIKE %s
-               OR 英文名 LIKE %s
+            WHERE 中文名 = %s
+               OR 英文名 = %s
                OR CAS号 = %s
                OR 编号 IN (
                    SELECT 化学品编号 
                    FROM 化学品别名 
-                   WHERE 别名 LIKE %s
+                   WHERE 别名 = %s
                )
             LIMIT 1
-        """, (f'%{keyword}%', f'%{keyword}%', keyword, f'%{keyword}%'))
+        """, (keyword, keyword, keyword, keyword))
         
         result = cursor.fetchone()
+        
+        # 如果精确匹配没找到，再进行模糊匹配
+        if not result:
+            cursor.execute("""
+                SELECT 编号 FROM 化学品 
+                WHERE 中文名 LIKE %s
+                   OR 英文名 LIKE %s
+                   OR CAS号 = %s
+                   OR 编号 IN (
+                       SELECT 化学品编号 
+                       FROM 化学品别名 
+                       WHERE 别名 LIKE %s
+                   )
+                LIMIT 1
+            """, (f'%{keyword}%', f'%{keyword}%', keyword, f'%{keyword}%'))
+            
+            result = cursor.fetchone()
         
         if not result:
             cursor.close()
@@ -952,6 +970,427 @@ def serve_pdf(filename):
         return send_from_directory(app.config['PDF_FOLDER'], filename)
     except FileNotFoundError:
         return jsonify({'error': 'PDF文件未找到'}), 404
+
+@app.route('/api/search-multiple', methods=['POST'])
+def search_multiple():
+    """多化学品查询接口（通过化学品ID）"""
+    data = request.get_json()
+    chemical_ids = data.get('chemical_ids', [])
+    
+    if not chemical_ids:
+        return jsonify({'error': '请提供化学品ID列表'}), 400
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        chemicals = []
+        
+        for chemical_id in chemical_ids:
+            # 获取化学品基本信息
+            cursor.execute("""
+                SELECT 
+                    c.编号,
+                    c.CAS号,
+                    c.中文名,
+                    c.英文名,
+                    c.分子式,
+                    GROUP_CONCAT(a.别名 SEPARATOR '、') AS 所有别名
+                FROM 化学品 c
+                LEFT JOIN 化学品别名 a ON c.编号 = a.化学品编号
+                WHERE c.编号 = %s
+                GROUP BY c.编号, c.CAS号, c.中文名, c.英文名, c.分子式
+            """, (chemical_id,))
+            
+            basic_info = cursor.fetchone()
+            
+            if not basic_info:
+                continue
+            
+            # 获取所有MSDS章节
+            cursor.execute("""
+                SELECT 
+                    s.章节序号,
+                    s.章节标题,
+                    s.内容,
+                    s.图片JSON
+                FROM MSDS文档 d
+                JOIN MSDS章节 s ON d.编号 = s.文档编号
+                WHERE d.化学品编号 = %s
+                ORDER BY s.章节序号
+            """, (chemical_id,))
+            
+            msds_chapters = cursor.fetchall()
+            
+            chemicals.append({
+                'basic_info': basic_info,
+                'msds_chapters': process_results(msds_chapters),
+                'found': True
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'chemicals': chemicals
+        })
+    
+    except Exception as e:
+        return jsonify({'error': f'查询失败: {str(e)}'}), 500
+
+@app.route('/api/compatibility-check', methods=['POST'])
+def check_compatibility():
+    """多化学品共存禁忌分析接口"""
+    import re
+    
+    data = request.get_json()
+    chemical_ids = data.get('chemical_ids', [])
+    
+    if len(chemical_ids) < 2:
+        return jsonify({'error': '至少需要2个化学品进行共存分析'}), 400
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        chemical_data = []
+        
+        # 获取每个化学品的信息
+        for chem_id in chemical_ids:
+            # 获取基本信息
+            cursor.execute("""
+                SELECT 
+                    c.编号, c.CAS号, c.中文名, c.英文名, c.分子式,
+                    GROUP_CONCAT(a.别名 SEPARATOR '、') AS 所有别名
+                FROM 化学品 c
+                LEFT JOIN 化学品别名 a ON c.编号 = a.化学品编号
+                WHERE c.编号 = %s
+                GROUP BY c.编号, c.CAS号, c.中文名, c.英文名, c.分子式
+            """, (chem_id,))
+            
+            basic_info = cursor.fetchone()
+            
+            if not basic_info:
+                continue
+            
+            # 获取第10章
+            cursor.execute("""
+                SELECT s.内容
+                FROM MSDS文档 d
+                JOIN MSDS章节 s ON d.编号 = s.文档编号
+                WHERE d.化学品编号 = %s AND s.章节序号 = 10
+            """, (chem_id,))
+            
+            chapter10 = cursor.fetchone()
+            chapter10_content = chapter10['内容'] if chapter10 else ''
+            
+            # 获取第2章
+            cursor.execute("""
+                SELECT s.内容
+                FROM MSDS文档 d
+                JOIN MSDS章节 s ON d.编号 = s.文档编号
+                WHERE d.化学品编号 = %s AND s.章节序号 = 2
+            """, (chem_id,))
+            
+            chapter2 = cursor.fetchone()
+            chapter2_content = chapter2['内容'] if chapter2 else ''
+            
+            # 提取不相容物质
+            incompatible = extract_incompatible_substances(chapter10_content)
+            
+            # 提取GHS分类
+            ghs_categories = extract_ghs_categories(chapter2_content)
+            
+            chemical_data.append({
+                'id': basic_info['编号'],
+                'name': basic_info['中文名'],
+                'english_name': basic_info['英文名'],
+                'cas': basic_info['CAS号'],
+                'aliases': basic_info.get('所有别名', ''),
+                'incompatible': incompatible,
+                'ghs_categories': ghs_categories
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        # 进行共存分析
+        conflicts = []
+        warnings = []
+        
+        for i, chem1 in enumerate(chemical_data):
+            for chem2 in chemical_data[i+1:]:
+                # 检查chem1的不相容列表是否包含chem2
+                for incompatible_substance in chem1['incompatible']:
+                    if match_substance_name(
+                        incompatible_substance,
+                        chem2['name'],
+                        chem2['english_name'],
+                        chem2['cas'],
+                        chem2['aliases']
+                    ):
+                        conflicts.append({
+                            'chemical_1': chem1['name'],
+                            'chemical_2': chem2['name'],
+                            'reason': f"{chem1['name']}的MSDS显示与{incompatible_substance}不相容",
+                            'severity': 'high'
+                        })
+                
+                # 检查chem2的不相容列表是否包含chem1
+                for incompatible_substance in chem2['incompatible']:
+                    if match_substance_name(
+                        incompatible_substance,
+                        chem1['name'],
+                        chem1['english_name'],
+                        chem1['cas'],
+                        chem1['aliases']
+                    ):
+                        conflicts.append({
+                            'chemical_1': chem2['name'],
+                            'chemical_2': chem1['name'],
+                            'reason': f"{chem2['name']}的MSDS显示与{incompatible_substance}不相容",
+                            'severity': 'high'
+                        })
+                
+                # GHS分类风险警告
+                chem1_categories = set(chem1['ghs_categories'])
+                chem2_categories = set(chem2['ghs_categories'])
+                
+                # 易燃 + 氧化性 = 高风险
+                if (('易燃液体' in chem1_categories or '易燃气体' in chem1_categories) and 
+                    ('氧化性液体' in chem2_categories or '氧化性固体' in chem2_categories or '氧化性气体' in chem2_categories)):
+                    warnings.append({
+                        'type': 'high_risk_combination',
+                        'message': f"{chem1['name']}（易燃）与{chem2['name']}（氧化性）混合存在极高风险",
+                        'severity': 'high'
+                    })
+                elif (('易燃液体' in chem2_categories or '易燃气体' in chem2_categories) and 
+                      ('氧化性液体' in chem1_categories or '氧化性固体' in chem1_categories or '氧化性气体' in chem1_categories)):
+                    warnings.append({
+                        'type': 'high_risk_combination',
+                        'message': f"{chem2['name']}（易燃）与{chem1['name']}（氧化性）混合存在极高风险",
+                        'severity': 'high'
+                    })
+                
+                # 多个易燃物质
+                if (('易燃液体' in chem1_categories or '易燃气体' in chem1_categories) and 
+                    ('易燃液体' in chem2_categories or '易燃气体' in chem2_categories)):
+                    warnings.append({
+                        'type': 'flammable_combination',
+                        'message': f"{chem1['name']}和{chem2['name']}均为易燃物质，需加强防火措施",
+                        'severity': 'medium'
+                    })
+        
+        # 评估危害等级
+        risk_score = len(conflicts) * 10 + sum(8 if w['severity'] == 'high' else 3 for w in warnings)
+        
+        if risk_score >= 20:
+            hazard_level, hazard_desc = 'extreme', '极高风险'
+        elif risk_score >= 10:
+            hazard_level, hazard_desc = 'high', '高风险'
+        elif risk_score >= 5:
+            hazard_level, hazard_desc = 'medium', '中等风险'
+        else:
+            hazard_level, hazard_desc = 'low', '低风险'
+        
+        return jsonify({
+            'chemicals': chemical_data,
+            'conflicts': conflicts,
+            'warnings': warnings,
+            'safe': len(conflicts) == 0,
+            'hazard_level': hazard_level,
+            'hazard_description': hazard_desc,
+            'risk_score': risk_score
+        })
+    
+    except Exception as e:
+        return jsonify({'error': f'分析失败: {str(e)}'}), 500
+
+def extract_incompatible_substances(content):
+    """从第10章内容中提取不相容物质"""
+    if not content:
+        return []
+    
+    import re
+    incompatible = []
+    lines = content.split('\n')
+    
+    # 方法1：匹配"禁配物"或"不相容物质"关键词，提取下一行或同一行的内容
+    for i, line in enumerate(lines):
+        line = line.strip()
+        
+        # 检查是否是关键词行
+        if re.search(r'禁配物|不相容[的]?物质|应避免[与]?接触[的]?物质', line, re.IGNORECASE):
+            # 尝试从当前行提取（如果有冒号）
+            match = re.search(r'[：:]\s*(.+)', line)
+            if match:
+                substances_str = match.group(1).strip()
+            # 或者从下一行提取
+            elif i + 1 < len(lines):
+                substances_str = lines[i + 1].strip()
+            else:
+                continue
+            
+            # 分割物质名称
+            if substances_str:
+                substances = re.split(r'[、,，;；/和与]+', substances_str)
+                for substance in substances:
+                    substance = substance.strip()
+                    substance = re.sub(r'[。，,;；]$', '', substance)  # 移除末尾标点
+                    if substance and len(substance) > 1 and substance not in ['无', '未明确', '无数据']:
+                        incompatible.append(substance)
+    
+    # 方法2：直接匹配模式（兼容性匹配）
+    patterns = [
+        r'禁配物[：:]\s*(.+?)(?:\n|$)',
+        r'不相容[的]?物质[：:]\s*(.+?)(?:\n|$)',
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, content, re.IGNORECASE | re.MULTILINE | re.DOTALL)
+        for match in matches:
+            match = match.strip()
+            if match:
+                substances = re.split(r'[、,，;；/和与]+', match)
+                for substance in substances:
+                    substance = substance.strip()
+                    substance = re.sub(r'[。，,;；]$', '', substance)
+                    if substance and len(substance) > 1 and substance not in ['无', '未明确', '无数据']:
+                        incompatible.append(substance)
+    
+    return list(set(incompatible))  # 去重
+
+def extract_ghs_categories(content):
+    """从第2章提取GHS分类"""
+    if not content:
+        return []
+    
+    import re
+    categories = []
+    
+    ghs_keywords = [
+        '易燃液体', '易燃气体', '易燃固体', '爆炸物', '氧化性液体', 
+        '氧化性固体', '氧化性气体', '加压气体', '自反应物质', 
+        '自燃液体', '自燃固体', '自热物质', '遇水放出易燃气体',
+        '有机过氧化物', '金属腐蚀物', '急性毒性', '皮肤腐蚀',
+        '严重眼损伤', '呼吸道致敏', '皮肤致敏', '生殖细胞致突变',
+        '致癌性', '生殖毒性', '特异性靶器官毒性', '吸入危害',
+        '对水生环境的危害', '对臭氧层的危害'
+    ]
+    
+    for keyword in ghs_keywords:
+        if keyword in content:
+            categories.append(keyword)
+    
+    return categories
+
+def match_substance_name(substance, chemical_name, chemical_english, cas_number, aliases):
+    """匹配物质名称到化学品"""
+    # 精确匹配
+    if substance == chemical_name or substance == chemical_english or substance == cas_number:
+        return True
+    
+    # 包含匹配
+    if substance in chemical_name or substance in chemical_english:
+        return True
+    
+    # 别名匹配
+    if aliases:
+        for alias in aliases.split('、'):
+            if substance in alias or alias in substance:
+                return True
+    
+    return False
+
+@app.route('/api/compatibility-ai', methods=['POST'])
+def check_compatibility_ai():
+    """AI驱动的化学品共存禁忌分析"""
+    data = request.get_json()
+    chemical_ids = data.get('chemical_ids', [])
+    
+    if len(chemical_ids) < 2:
+        return jsonify({'error': '至少需要2个化学品进行AI分析'}), 400
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        chemicals_data = []
+        
+        # 获取每个化学品的详细信息
+        for chem_id in chemical_ids:
+            # 基本信息
+            cursor.execute("""
+                SELECT 
+                    c.编号, c.CAS号, c.中文名, c.英文名, c.分子式,
+                    GROUP_CONCAT(a.别名 SEPARATOR '、') AS 所有别名
+                FROM 化学品 c
+                LEFT JOIN 化学品别名 a ON c.编号 = a.化学品编号
+                WHERE c.编号 = %s
+                GROUP BY c.编号, c.CAS号, c.中文名, c.英文名, c.分子式
+            """, (chem_id,))
+            
+            basic_info = cursor.fetchone()
+            if not basic_info:
+                continue
+            
+            # 获取第2章（危险性概述）
+            cursor.execute("""
+                SELECT s.内容
+                FROM MSDS文档 d
+                JOIN MSDS章节 s ON d.编号 = s.文档编号
+                WHERE d.化学品编号 = %s AND s.章节序号 = 2
+            """, (chem_id,))
+            chapter2 = cursor.fetchone()
+            chapter2_content = chapter2['内容'] if chapter2 else ''
+            
+            # 获取第10章（稳定性和反应性）
+            cursor.execute("""
+                SELECT s.内容
+                FROM MSDS文档 d
+                JOIN MSDS章节 s ON d.编号 = s.文档编号
+                WHERE d.化学品编号 = %s AND s.章节序号 = 10
+            """, (chem_id,))
+            chapter10 = cursor.fetchone()
+            chapter10_content = chapter10['内容'] if chapter10 else ''
+            
+            # 提取不相容物质和GHS分类
+            incompatible = extract_incompatible_substances(chapter10_content)
+            ghs_categories = extract_ghs_categories(chapter2_content)
+            
+            chemicals_data.append({
+                'id': basic_info['编号'],
+                'name': basic_info['中文名'],
+                'cas': basic_info['CAS号'],
+                'formula': basic_info['分子式'],
+                'aliases': basic_info.get('所有别名', ''),
+                'incompatible': incompatible,
+                'ghs_categories': ghs_categories,
+                'chapter2_summary': extract_chapter_summary(chapter2_content, 300),
+                'chapter10_summary': extract_chapter_summary(chapter10_content, 300)
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        if len(chemicals_data) < 2:
+            return jsonify({'error': '未找到足够的化学品数据'}), 400
+        
+        # 调用AI分析
+        ai_result = analyze_compatibility_with_ai(chemicals_data)
+        
+        if not ai_result['success']:
+            return jsonify({'error': ai_result['error']}), 500
+        
+        return jsonify({
+            'success': True,
+            'report': ai_result['report'],
+            'usage': ai_result.get('usage', {}),
+            'chemicals': [{'id': c['id'], 'name': c['name'], 'cas': c['cas']} for c in chemicals_data]
+        })
+    
+    except Exception as e:
+        return jsonify({'error': f'AI分析失败: {str(e)}'}), 500
 
 if __name__ == '__main__':
     print("=" * 60)

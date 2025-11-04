@@ -2129,6 +2129,12 @@
                 width: 100%;
             }
 
+            .compare-toggle-btn {
+                margin-left: 0;
+                margin-top: 10px;
+                width: 100%;
+            }
+
             .pdf-viewer-container {
                 width: 95%;
                 height: 95vh;
@@ -2252,6 +2258,327 @@
 
         .import-toggle-btn .fas {
             margin-right: 8px;
+        }
+
+        .compare-toggle-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            margin-left: 10px;
+        }
+
+        .compare-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .compare-toggle-btn .fas {
+            margin-right: 8px;
+        }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #374151;
+            font-size: 20px;
+        }
+
+        .modal-header .fas {
+            margin-right: 10px;
+            color: #f59e0b;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #374151;
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .compare-input-item {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .compare-input-wrapper {
+            position: relative;
+        }
+
+        .compare-input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            font-size: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .compare-input:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .compare-input-item .remove-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .compare-input-item .remove-btn:hover {
+            background: #dc2626;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .compare-autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .compare-autocomplete-list.show {
+            display: block;
+        }
+
+        .add-input-btn {
+            padding: 10px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-input-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .compare-search-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .compare-search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .compare-cancel-btn {
+            padding: 12px 30px;
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .compare-cancel-btn:hover {
+            background: #d1d5db;
+        }
+
+        /* 相容性报告样式 */
+        .compatibility-report {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .compatibility-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .hazard-icon {
+            font-size: 32px;
+        }
+
+        .hazard-safe {
+            color: #10b981;
+        }
+
+        .hazard-caution {
+            color: #f59e0b;
+        }
+
+        .hazard-warning {
+            color: #f97316;
+        }
+
+        .hazard-danger {
+            color: #ef4444;
+        }
+
+        .compatibility-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #374151;
+            margin: 0;
+        }
+
+        .conflicts-section, .warnings-section {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        .conflict-item, .warning-item {
+            padding: 12px 15px;
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .warning-item {
+            background: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+
+        .conflict-text, .warning-text {
+            color: #374151;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .recommendations {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .recommendations-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .recommendations-list {
+            color: #374151;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .recommendations-list li {
+            margin-bottom: 8px;
         }
 
         .upload-icon .fas {
@@ -2422,8 +2749,12 @@
                     <div class="autocomplete-list" id="autocompleteList"></div>
                 </div>
                 <button class="search-btn" onclick="search()"><i class="fas fa-search"></i> 查询</button>
+                <button class="compare-toggle-btn" onclick="openCompareModal()">
+                    <i class="fas fa-brain"></i> 智能多化学品查询
+                </button>
                 <button class="list-btn" onclick="toggleSidebar()"><i class="fas fa-list"></i> 查看列表</button>
             </div>
+            
             <div class="search-hint">
                 <i class="fas fa-lightbulb"></i> 支持查询：中文名（如：甲醛）、英文名（如：formaldehyde）、CAS号（如：50-00-0）、别名（如：福尔马林）
             </div>
@@ -2460,6 +2791,34 @@
 
         <div class="results-section" id="resultsSection">
             <!-- 查询结果将显示在这里 -->
+        </div>
+    </div>
+
+    <!-- 智能多化学品查询模态框 -->
+    <div class="modal-overlay" id="compareModal" style="display: none;" onclick="if(event.target === this) closeCompareModal();">
+        <div class="modal-content compare-modal" onclick="event.stopPropagation();">
+            <div class="modal-header">
+                <h2><i class="fas fa-brain"></i> 智能多化学品查询</h2>
+                <button class="modal-close" onclick="closeCompareModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="compareInputsContainer">
+                    <!-- 动态输入框将在这里生成 -->
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="add-input-btn" onclick="addCompareInput()">
+                        <i class="fas fa-plus"></i> 添加化学品
+                    </button>
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="compare-search-btn" onclick="searchMultipleChemicals()">
+                        <i class="fas fa-robot"></i> 开始智能分析
+                    </button>
+                    <button class="compare-cancel-btn" onclick="closeCompareModal()">
+                        取消
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -4235,6 +4594,912 @@
         function toggleImport() {
             const section = document.getElementById('importSection');
             section.classList.toggle('show');
+        }
+
+        // ==================== 智能多化学品查询功能 ====================
+        
+        let compareInputCount = 0;
+        let compareSelectedChemicals = {}; // 存储每个输入框选中的化学品 {inputIndex: {id, name, cas}}
+
+        // 打开智能查询模态框
+        function openCompareModal() {
+            const modal = document.getElementById('compareModal');
+            modal.style.display = 'flex';
+            compareInputCount = 0;
+            compareSelectedChemicals = {};
+            
+            // 初始化两个输入框
+            addCompareInput();
+            addCompareInput();
+        }
+
+        // 关闭智能查询模态框
+        function closeCompareModal() {
+            const modal = document.getElementById('compareModal');
+            modal.style.display = 'none';
+            const container = document.getElementById('compareInputsContainer');
+            container.innerHTML = '';
+            compareInputCount = 0;
+            compareSelectedChemicals = {};
+        }
+
+        // 添加输入框
+        function addCompareInput() {
+            const container = document.getElementById('compareInputsContainer');
+            const inputIndex = compareInputCount++;
+            
+            const inputItem = document.createElement('div');
+            inputItem.className = 'compare-input-item';
+            inputItem.dataset.index = inputIndex;
+            
+            inputItem.innerHTML = `
+                <div class="compare-input-wrapper">
+                    <input 
+                        type="text" 
+                        class="compare-input" 
+                        id="compareInput${inputIndex}"
+                        placeholder="请输入化学品名称、CAS号或别名..."
+                        autocomplete="off"
+                        oninput="handleCompareInput(${inputIndex}, event)"
+                        onfocus="handleCompareFocus(${inputIndex})"
+                        onblur="handleCompareBlur(${inputIndex})"
+                        onkeydown="handleCompareKeydown(${inputIndex}, event)"
+                    >
+                    <button class="remove-btn" onclick="removeCompareInput(${inputIndex})" title="删除">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="compare-autocomplete-list" id="compareAutocomplete${inputIndex}"></div>
+                </div>
+            `;
+            
+            container.appendChild(inputItem);
+        }
+
+        // 删除输入框
+        function removeCompareInput(index) {
+            const container = document.getElementById('compareInputsContainer');
+            const inputItem = container.querySelector(`[data-index="${index}"]`);
+            if (inputItem) {
+                inputItem.remove();
+                delete compareSelectedChemicals[index];
+            }
+            
+            // 如果只剩下一个输入框，不能再删除
+            const remainingInputs = container.querySelectorAll('.compare-input-item');
+            if (remainingInputs.length === 0) {
+                addCompareInput();
+            }
+        }
+
+        // 处理输入框输入
+        let compareAutocompleteTimers = {};
+        
+        function handleCompareInput(index, event) {
+            const input = document.getElementById(`compareInput${index}`);
+            const keyword = input.value.trim();
+            const autocompleteList = document.getElementById(`compareAutocomplete${index}`);
+            
+            // 清除之前的定时器
+            if (compareAutocompleteTimers[index]) {
+                clearTimeout(compareAutocompleteTimers[index]);
+            }
+            
+            // 如果输入为空，隐藏候选列表并清除选中状态
+            if (!keyword) {
+                autocompleteList.classList.remove('show');
+                delete compareSelectedChemicals[index];
+                return;
+            }
+            
+            // 如果已选中化学品，但用户修改了输入，清除选中状态
+            if (compareSelectedChemicals[index] && input.value !== compareSelectedChemicals[index].name) {
+                delete compareSelectedChemicals[index];
+            }
+            
+            // 延迟300ms搜索（防抖）
+            compareAutocompleteTimers[index] = setTimeout(() => {
+                fetchCompareAutocomplete(index, keyword);
+            }, 300);
+        }
+
+        // 获取自动补全候选项
+        async function fetchCompareAutocomplete(index, keyword) {
+            const autocompleteList = document.getElementById(`compareAutocomplete${index}`);
+            
+            // 显示加载状态
+            autocompleteList.innerHTML = '<div class="autocomplete-loading"><i class="fas fa-spinner fa-spin"></i> 搜索中...</div>';
+            autocompleteList.classList.add('show');
+            
+            try {
+                const response = await fetch(`/api/autocomplete?keyword=${encodeURIComponent(keyword)}`);
+                const data = await response.json();
+                
+                if (response.ok && data.suggestions && data.suggestions.length > 0) {
+                    renderCompareAutocomplete(index, data.suggestions, keyword);
+                } else {
+                    autocompleteList.innerHTML = '<div class="autocomplete-no-results">未找到匹配项</div>';
+                }
+            } catch (error) {
+                console.error('自动补全失败:', error);
+                autocompleteList.innerHTML = '<div class="autocomplete-no-results">加载失败</div>';
+            }
+        }
+
+        // 渲染自动补全列表
+        function renderCompareAutocomplete(index, suggestions, keyword) {
+            const autocompleteList = document.getElementById(`compareAutocomplete${index}`);
+            
+            let html = '';
+            suggestions.forEach((item, itemIndex) => {
+                let displayName = item.中文名;
+                const regex = new RegExp(`(${keyword})`, 'gi');
+                displayName = displayName.replace(regex, '<span class="autocomplete-item-match">$1</span>');
+                
+                let casDisplay = item.CAS号 || '';
+                if (casDisplay.includes(keyword)) {
+                    casDisplay = casDisplay.replace(regex, '<span class="autocomplete-item-match">$1</span>');
+                }
+                
+                html += `
+                    <div class="autocomplete-item" onclick="selectCompareAutocomplete(${index}, ${item.编号}, '${item.中文名.replace(/'/g, "\\'")}', '${(item.CAS号 || '').replace(/'/g, "\\'")}')">
+                        <span class="autocomplete-item-name">${displayName}</span>
+                        ${casDisplay ? `<span class="autocomplete-item-cas">${casDisplay}</span>` : ''}
+                    </div>
+                `;
+            });
+            
+            autocompleteList.innerHTML = html;
+            autocompleteList.classList.add('show');
+        }
+
+        // 选择候选项
+        function selectCompareAutocomplete(index, chemicalId, chemicalName, casNumber) {
+            const input = document.getElementById(`compareInput${index}`);
+            const autocompleteList = document.getElementById(`compareAutocomplete${index}`);
+            
+            // 设置输入框值为化学品名称
+            input.value = chemicalName;
+            
+            // 保存选中的化学品信息
+            compareSelectedChemicals[index] = {
+                id: chemicalId,
+                name: chemicalName,
+                cas: casNumber
+            };
+            
+            // 隐藏候选列表
+            autocompleteList.classList.remove('show');
+        }
+
+        // 处理输入框焦点
+        function handleCompareFocus(index) {
+            const input = document.getElementById(`compareInput${index}`);
+            const keyword = input.value.trim();
+            
+            if (keyword && !compareSelectedChemicals[index]) {
+                fetchCompareAutocomplete(index, keyword);
+            }
+        }
+
+        // 处理输入框失焦
+        function handleCompareBlur(index) {
+            // 延迟隐藏，以便点击候选项
+            setTimeout(() => {
+                const autocompleteList = document.getElementById(`compareAutocomplete${index}`);
+                autocompleteList.classList.remove('show');
+            }, 200);
+        }
+
+        // 处理输入框键盘事件
+        function handleCompareKeydown(index, event) {
+            const autocompleteList = document.getElementById(`compareAutocomplete${index}`);
+            const items = autocompleteList.querySelectorAll('.autocomplete-item');
+            
+            if (!autocompleteList.classList.contains('show') || items.length === 0) {
+                return;
+            }
+            
+            let selectedIndex = -1;
+            items.forEach((item, i) => {
+                if (item.classList.contains('active')) {
+                    selectedIndex = i;
+                }
+            });
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                updateCompareAutocompleteSelection(items, selectedIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                updateCompareAutocompleteSelection(items, selectedIndex);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (selectedIndex >= 0) {
+                    const item = items[selectedIndex];
+                    const onclick = item.getAttribute('onclick');
+                    if (onclick) {
+                        eval(onclick);
+                    }
+                }
+            } else if (event.key === 'Escape') {
+                autocompleteList.classList.remove('show');
+            }
+        }
+
+        // 更新自动补全选择
+        function updateCompareAutocompleteSelection(items, selectedIndex) {
+            items.forEach((item, index) => {
+                if (index === selectedIndex) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // 搜索多个化学品
+        async function searchMultipleChemicals() {
+            // 收集所有选中的化学品ID
+            const chemicalIds = [];
+            const selectedNames = [];
+            
+            for (let index in compareSelectedChemicals) {
+                const chem = compareSelectedChemicals[index];
+                if (chem && chem.id) {
+                    chemicalIds.push(chem.id);
+                    selectedNames.push(chem.name);
+                }
+            }
+            
+            if (chemicalIds.length < 2) {
+                alert('请至少选择2个化学品进行智能查询');
+                return;
+            }
+            
+            // 关闭模态框
+            closeCompareModal();
+            
+            // 显示加载状态
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.innerHTML = '<div class="loading">正在查询多个化学品...</div>';
+            resultsSection.classList.add('show');
+            
+            try {
+                // 1. 并行获取化学品数据和兼容性分析
+                const [searchResponse, compatibilityResponse] = await Promise.all([
+                    fetch('/api/search-multiple', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chemical_ids: chemicalIds })
+                    }),
+                    fetch('/api/compatibility-check', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chemical_ids: chemicalIds })
+                    })
+                ]);
+                
+                const searchData = await searchResponse.json();
+                const compatibilityData = await compatibilityResponse.json();
+                
+                if (!searchResponse.ok) {
+                    throw new Error(searchData.error || '搜索失败');
+                }
+                
+                if (!compatibilityResponse.ok) {
+                    console.warn('相容性检查失败:', compatibilityData.error);
+                }
+                
+                // 2. 显示结果
+                displayMultipleResultsWithAI(searchData, compatibilityData, selectedNames);
+                
+            } catch (error) {
+                resultsSection.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-times-circle"></i> 查询失败: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 显示多个化学品搜索结果（带AI分析）
+        async function displayMultipleResultsWithAI(searchData, compatibilityData, selectedNames) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            let html = '';
+            
+            // 1. 添加AI分析区域（占位，稍后自动填充）
+            html += '<div id="aiAnalysisSection"></div>';
+            
+            // 2. 显示每个化学品的完整信息
+            if (searchData.chemicals && searchData.chemicals.length > 0) {
+                searchData.chemicals.forEach((chem, index) => {
+                    html += renderChemicalCard(chem, index);
+                });
+            } else {
+                html += '<div class="error-message">未找到任何化学品信息</div>';
+            }
+            
+            resultsSection.innerHTML = html;
+            resultsSection.classList.add('show');
+            
+            // 3. 自动触发AI分析（不需要用户点击）
+            const chemicalIds = searchData.chemicals.map(c => c.basic_info.编号);
+            await performAIAnalysis(chemicalIds, selectedNames);
+        }
+
+        // 执行AI深度分析
+        async function performAIAnalysis(chemicalIds, selectedNames) {
+            const aiSection = document.getElementById('aiAnalysisSection');
+            
+            // 显示加载状态
+            aiSection.innerHTML = `
+                <div style="margin-bottom: 20px; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white; text-align: center;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 15px;"></i>
+                    <div style="font-size: 18px; font-weight: 600;">🤖 AI正在深度分析化学品共存性...</div>
+                    <div style="font-size: 14px; margin-top: 10px; opacity: 0.9;">
+                        正在分析化学性质、反应风险并生成方程式<br>
+                        预计需要10-30秒，请耐心等待...
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/api/compatibility-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chemical_ids: chemicalIds })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    displayAIReport(data.report, data.usage, selectedNames);
+                    showNotification('AI分析完成！', 'success');
+                } else {
+                    aiSection.innerHTML = `
+                        <div class="error-message" style="margin-top: 20px;">
+                            <i class="fas fa-times-circle"></i> AI分析失败: ${data.error || '未知错误'}
+                        </div>
+                    `;
+                    showNotification('AI分析失败', 'error');
+                }
+            } catch (error) {
+                aiSection.innerHTML = `
+                    <div class="error-message" style="margin-top: 20px;">
+                        <i class="fas fa-times-circle"></i> 网络错误: ${error.message}
+                    </div>
+                `;
+                showNotification('AI分析失败', 'error');
+            }
+        }
+
+        // 显示AI分析报告
+        function displayAIReport(report, usage, selectedNames) {
+            const aiSection = document.getElementById('aiAnalysisSection');
+            
+            const riskColors = {
+                '极高风险': '#e74c3c',
+                '高风险': '#e67e22',
+                '中等风险': '#f39c12',
+                '低风险': '#27ae60'
+            };
+            
+            const riskColor = riskColors[report.compatibility.risk_level] || '#95a5a6';
+            const canCoexist = report.compatibility.can_coexist;
+            
+            // 构建化学品名称字符串（用加号连接）
+            const chemicalNamesStr = selectedNames && selectedNames.length > 0 
+                ? ' - ' + selectedNames.join(' + ')
+                : '';
+            
+            // 开始构建HTML
+            let html = `
+                <div id="aiReportContainer" style="margin-bottom: 30px; padding: 25px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0; color: #2c3e50; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-robot" style="color: #667eea;"></i>
+                                AI智能分析报告
+                            </span>
+                            <span style="font-size: 16px; color: #667eea; font-weight: 500;">${chemicalNamesStr}</span>
+                        </h2>
+                        <button onclick="toggleAIReport()" 
+                                style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-chevron-up" id="aiReportToggleIcon"></i>
+                            <span id="aiReportToggleText">折叠报告</span>
+                        </button>
+                    </div>
+                    
+                    <div id="aiReportContent">
+                    
+                    <!-- 总结 -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid ${riskColor};">
+                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">📊 评估总结</h3>
+                        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #555;">${report.summary}</p>
+                    </div>
+                    
+                    <!-- 风险等级 -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">🔬 共存安全性评估</h3>
+                                <div style="font-size: 24px; font-weight: bold; color: ${riskColor}; margin-bottom: 5px;">
+                                    ${report.compatibility.risk_level}
+                                </div>
+                                <div style="color: #7f8c8d;">
+                                    风险评分: ${report.compatibility.risk_score}/100
+                                </div>
+                            </div>
+                            <div style="font-size: 48px;">
+                                ${canCoexist ? '✅' : '❌'}
+                            </div>
+                        </div>
+            `;
+            
+            // 不相容原因
+            if (report.compatibility.incompatible_reasons && report.compatibility.incompatible_reasons.length > 0) {
+                html += `
+                        <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+                            <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 14px;">⚠️ 不相容原因：</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #555;">
+                `;
+                report.compatibility.incompatible_reasons.forEach(r => {
+                    html += `<li style="margin-bottom: 5px;">${r}</li>`;
+                });
+                html += `
+                            </ul>
+                        </div>
+                `;
+            }
+            
+            // 具体风险
+            if (report.compatibility.specific_risks && report.compatibility.specific_risks.length > 0) {
+                html += `
+                        <div style="margin-top: 15px; padding: 15px; background: #fee; border-radius: 6px; border-left: 4px solid #e74c3c;">
+                            <h4 style="margin: 0 0 10px 0; color: #c0392b; font-size: 14px;">🔥 具体风险：</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #555;">
+                `;
+                report.compatibility.specific_risks.forEach(r => {
+                    html += `<li style="margin-bottom: 5px;">${r}</li>`;
+                });
+                html += `
+                            </ul>
+                        </div>
+                `;
+            }
+            
+            html += `
+                    </div>
+            `;
+            
+            // 化学反应方程式（单独处理避免模板嵌套问题）
+            if (report.chemical_reactions && report.chemical_reactions.length > 0) {
+                html += `
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #e74c3c;">
+                        <h3 style="margin: 0 0 15px 0; color: #c0392b; font-size: 16px;">⚗️ 化学反应分析</h3>
+                `;
+                
+                report.chemical_reactions.forEach(reaction => {
+                    const dangerColors = {
+                        '剧烈': '#e74c3c',
+                        '中等': '#f39c12',
+                        '缓慢': '#3498db',
+                        '无明显反应': '#95a5a6'
+                    };
+                    const dangerColor = dangerColors[reaction.danger_level] || '#95a5a6';
+                    
+                    html += `
+                        <div style="padding: 15px; background: #fff5f5; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid ${dangerColor};">
+                            <div style="margin-bottom: 10px;">
+                                <span style="background: ${dangerColor}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                                    ${reaction.danger_level}反应
+                                </span>
+                            </div>
+                            <div style="background: white; padding: 12px; border-radius: 4px; margin-bottom: 10px; font-family: 'Courier New', monospace; font-size: 15px; color: #2c3e50; font-weight: 600;">
+                                ${reaction.equation}
+                            </div>
+                            <div style="margin-bottom: 8px; color: #555;">
+                                <strong>反应物：</strong>${reaction.reactants.join(' + ')}
+                            </div>
+                    `;
+                    
+                    if (reaction.products && reaction.products.length > 0) {
+                        html += `
+                            <div style="margin-bottom: 8px; color: #555;">
+                                <strong>生成物：</strong>${reaction.products.join('、')}
+                            </div>
+                        `;
+                    }
+                    
+                    if (reaction.conditions) {
+                        html += `
+                            <div style="margin-bottom: 8px; color: #555;">
+                                <strong>反应条件：</strong>${reaction.conditions}
+                            </div>
+                        `;
+                    }
+                    
+                    html += `
+                            <div style="color: #555; font-size: 14px; line-height: 1.6;">
+                                <strong>说明：</strong>${reaction.description}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            // 化学品对比
+            html += `
+                    <!-- 化学品对比 -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 16px;">📋 化学品对比分析</h3>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="padding: 15px; background: #e8f5e9; border-radius: 6px; border-left: 4px solid #4caf50;">
+                                <h4 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 14px;">✅ 相同点：</h4>
+                                <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
+            `;
+            
+            report.comparison.similarities.forEach(s => {
+                html += `<li style="margin-bottom: 5px;">${s}</li>`;
+            });
+            
+            html += `
+                                </ul>
+                            </div>
+                            
+                            <div style="padding: 15px; background: #fff3e0; border-radius: 6px; border-left: 4px solid #ff9800;">
+                                <h4 style="margin: 0 0 10px 0; color: #e65100; font-size: 14px;">🔄 不同点：</h4>
+                                <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
+            `;
+            
+            report.comparison.differences.forEach(d => {
+                html += `<li style="margin-bottom: 5px;">${d}</li>`;
+            });
+            
+            html += `
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 建议措施 -->
+                    <div style="background: white; padding: 20px; border-radius: 8px;">
+                        <h3 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 16px;">💡 AI推荐措施</h3>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 10px 0; color: #3498db; font-size: 14px;">📦 存储建议：</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px; line-height: 1.8;">
+            `;
+            
+            report.recommendations.storage.forEach(s => {
+                html += `<li style="margin-bottom: 5px;">${s}</li>`;
+            });
+            
+            html += `
+                            </ul>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 10px 0; color: #9b59b6; font-size: 14px;">🔧 操作建议：</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px; line-height: 1.8;">
+            `;
+            
+            report.recommendations.handling.forEach(h => {
+                html += `<li style="margin-bottom: 5px;">${h}</li>`;
+            });
+            
+            html += `
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 style="margin: 0 0 10px 0; color: #e74c3c; font-size: 14px;">🚨 应急措施：</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px; line-height: 1.8;">
+            `;
+            
+            report.recommendations.emergency.forEach(e => {
+                html += `<li style="margin-bottom: 5px;">${e}</li>`;
+            });
+            
+            html += `
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    </div>
+                </div>
+            `;
+            
+            aiSection.innerHTML = html;
+        }
+
+        // 切换AI报告展开/折叠
+        function toggleAIReport() {
+            const content = document.getElementById('aiReportContent');
+            const icon = document.getElementById('aiReportToggleIcon');
+            const text = document.getElementById('aiReportToggleText');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.className = 'fas fa-chevron-up';
+                text.textContent = '折叠报告';
+            } else {
+                content.style.display = 'none';
+                icon.className = 'fas fa-chevron-down';
+                text.textContent = '展开报告';
+            }
+        }
+
+        // 渲染相容性报告
+        function renderCompatibilityReport(data) {
+            const hazardLevel = data.hazard_level || 'low';
+            const conflicts = data.conflicts || [];
+            const warnings = data.warnings || [];
+            const hazardDesc = data.hazard_description || '低风险';
+            
+            let iconClass = 'hazard-safe';
+            let icon = 'fa-check-circle';
+            let title = '相容性评估：可以共存';
+            
+            if (hazardLevel === 'extreme') {
+                iconClass = 'hazard-danger';
+                icon = 'fa-exclamation-triangle';
+                title = '相容性评估：极高风险';
+            } else if (hazardLevel === 'high') {
+                iconClass = 'hazard-danger';
+                icon = 'fa-exclamation-circle';
+                title = '相容性评估：高风险';
+            } else if (hazardLevel === 'medium') {
+                iconClass = 'hazard-caution';
+                icon = 'fa-info-circle';
+                title = '相容性评估：中等风险';
+            }
+            
+            let html = `
+                <div class="compatibility-report">
+                    <div class="compatibility-header">
+                        <i class="fas ${icon} hazard-icon ${iconClass}"></i>
+                        <h3 class="compatibility-title">${title} - ${hazardDesc}</h3>
+                    </div>
+            `;
+            
+            // 显示冲突
+            if (conflicts.length > 0) {
+                html += '<div class="conflicts-section">';
+                html += '<div class="section-title"><i class="fas fa-ban"></i> 发现的不相容组合</div>';
+                conflicts.forEach(conflict => {
+                    html += `
+                        <div class="conflict-item">
+                            <div class="conflict-text">
+                                <strong>${conflict.chemical_1}</strong> 与 <strong>${conflict.chemical_2}</strong><br>
+                                ${conflict.reason}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // 显示警告
+            if (warnings.length > 0) {
+                html += '<div class="warnings-section">';
+                html += '<div class="section-title"><i class="fas fa-exclamation-triangle"></i> 风险警告</div>';
+                warnings.forEach(warning => {
+                    html += `
+                        <div class="warning-item">
+                            <div class="warning-text">${warning.message}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // 显示建议
+            html += '<div class="recommendations">';
+            html += '<div class="recommendations-title"><i class="fas fa-lightbulb"></i> 建议措施</div>';
+            html += '<ul class="recommendations-list">';
+            
+            if (conflicts.length > 0) {
+                html += '<li><strong>禁止混存：</strong>发现不相容物质，请将这些化学品分开存储。</li>';
+            }
+            if (warnings.some(w => w.severity === 'high')) {
+                html += '<li><strong>高风险组合：</strong>存在易燃与氧化性物质的组合，请确保安全距离和防火措施。</li>';
+            }
+            if (warnings.some(w => w.severity === 'medium')) {
+                html += '<li><strong>中等风险：</strong>可能存在反应风险，建议咨询专业人员。</li>';
+            }
+            if (conflicts.length === 0 && warnings.length === 0) {
+                html += '<li>未发现明显的相容性问题，但仍需遵循化学品安全存储规范。</li>';
+            }
+            html += '<li>请参考各化学品的MSDS文档获取更详细的安全信息。</li>';
+            
+            html += '</ul></div></div>';
+            
+            return html;
+        }
+
+        // 渲染单个化学品卡片
+        function renderChemicalCard(chem, index) {
+            const basic = chem.basic_info;
+            const chapters = chem.msds_chapters || [];
+            
+            let html = `
+                <div class="basic-info" style="margin-bottom: 30px;">
+                    <div class="chemical-name" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <span>${basic.中文名}</span>
+                            <span class="en-name">${basic.英文名 || ''}</span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="regulation-query-btn" onclick="queryRegulation('${basic.中文名.replace(/'/g, "\\'")}');">
+                                <i class="fas fa-gavel"></i> 法规查询
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">CAS号</div>
+                            <div class="info-value">${highlightCASNumbers(basic.CAS号 || '')}</div>
+                        </div>
+                        ${basic.分子式 ? `
+                        <div class="info-item">
+                            <div class="info-label">分子式</div>
+                            <div class="info-value">${basic.分子式}</div>
+                        </div>
+                        ` : ''}
+                        ${basic.所有别名 ? `
+                        <div class="info-item">
+                            <div class="info-label">别名</div>
+                            <div class="info-value">${basic.所有别名}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // MSDS章节
+            if (chapters.length > 0) {
+                html += `
+                    <div class="msds-section">
+                        <h2 class="msds-title">
+                            <span class="msds-title-text">
+                                <i class="fas fa-clipboard-list"></i> MSDS安全技术说明书
+                            </span>
+                            <button class="msds-expand-all-btn" onclick="toggleChemicalMSDS(${index})">
+                                <i class="fas fa-chevron-down"></i>
+                                <span id="expandBtnText${index}">展开MSDS</span>
+                            </button>
+                        </h2>
+                        <div class="chapters-list" id="chemicalMSDS${index}" style="display: none;">
+                `;
+                
+                chapters.forEach(chapter => {
+                    const hasCustomFormat = chapter.章节序号 >= 1 && chapter.章节序号 <= 16;
+                    let formattedContent = formatMSDSText(chapter.内容, chapter.章节序号);
+                    
+                    // 渲染图片（如果有）
+                    let imagesHtml = '';
+                    if (chapter.图片JSON && chapter.图片JSON.length > 0) {
+                        imagesHtml = '<div class="msds-images">';
+                        chapter.图片JSON.forEach(img => {
+                            const imgAlt = img.alt || (img.type === 'ghs' ? 'GHS象形图' : '运输标签');
+                            imagesHtml += `
+                                <div class="msds-image-item">
+                                    <img src="msds_json/${img.url}" alt="${imgAlt}" title="${imgAlt}">
+                                    ${img.alt ? `<p class="msds-image-caption">${img.alt}</p>` : ''}
+                                </div>
+                            `;
+                        });
+                        imagesHtml += '</div>';
+                    }
+                    
+                    // 将图片插入到文本中的特定位置
+                    let finalContent;
+                    if (chapter.章节序号 === 2 && imagesHtml) {
+                        finalContent = insertImagesIntoText(formattedContent, imagesHtml, '象形图');
+                    } else if (chapter.章节序号 === 14 && imagesHtml) {
+                        finalContent = insertImagesIntoText(formattedContent, imagesHtml, '运输标签');
+                    } else {
+                        finalContent = (hasCustomFormat ? formattedContent : `<div class="chapter-text">${formattedContent}</div>`) + imagesHtml;
+                    }
+                    
+                    html += `
+                        <div class="chapter-item" id="chapter-${index}-${chapter.章节序号}">
+                            <div class="chapter-header" onclick="toggleChapter(this)">
+                                <div class="chapter-title-wrapper">
+                                    <div class="chapter-number">${chapter.章节序号}</div>
+                                    <div class="chapter-title">${chapter.章节标题}</div>
+                                </div>
+                                <div class="chapter-icon">▼</div>
+                            </div>
+                            <div class="chapter-content">
+                                <div class="chapter-body">
+                                    ${finalContent}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+            
+            // 添加相关法规区域
+            html += `
+                <div class="regulations-section" id="regulationsSection${index}">
+                    <h2 class="regulations-title">
+                        <i class="fas fa-balance-scale"></i> 相关法律法规
+                        <span class="regulations-count" id="regulationsCount${index}">加载中...</span>
+                    </h2>
+                    <div class="regulations-loading" id="regulationsLoading${index}">
+                        <i class="fas fa-spinner fa-spin"></i> 正在加载法规信息...
+                    </div>
+                    <div class="regulations-container" id="regulationsContainer${index}"></div>
+                </div>
+            `;
+            
+            // 异步加载法规信息
+            setTimeout(() => {
+                loadRegulationsForChemical(basic.编号, index);
+            }, 100);
+            
+            return html;
+        }
+
+        // 切换化学品MSDS显示
+        function toggleChemicalMSDS(index) {
+            const content = document.getElementById(`chemicalMSDS${index}`);
+            const btn = event.target.closest('.msds-expand-all-btn');
+            const btnText = document.getElementById(`expandBtnText${index}`);
+            const btnIcon = btn.querySelector('i');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                btnText.textContent = '折叠MSDS';
+                btnIcon.className = 'fas fa-chevron-up';
+            } else {
+                content.style.display = 'none';
+                btnText.textContent = '展开MSDS';
+                btnIcon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        // 为单个化学品加载法规信息
+        async function loadRegulationsForChemical(chemicalId, index) {
+            const loadingEl = document.getElementById(`regulationsLoading${index}`);
+            const containerEl = document.getElementById(`regulationsContainer${index}`);
+            const countEl = document.getElementById(`regulationsCount${index}`);
+            
+            try {
+                const response = await fetch(`/api/regulations/${chemicalId}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // 隐藏加载提示
+                loadingEl.style.display = 'none';
+                
+                // 更新法规数量
+                countEl.textContent = `(${data.total}项)`;
+                countEl.style.color = '#667eea';
+                
+                // 渲染法规列表
+                renderRegulations(data.by_category, containerEl);
+                
+            } catch (error) {
+                loadingEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> 加载失败: ${error.message}`;
+                loadingEl.style.color = '#ef4444';
+            }
         }
 
         // 处理文件选择（支持批量）

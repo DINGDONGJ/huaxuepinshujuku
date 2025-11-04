@@ -3126,7 +3126,13 @@
                 chapters.forEach(chapter => {
                     // 根据章节序号进行格式化
                     const hasCustomFormat = chapter.章节序号 >= 1 && chapter.章节序号 <= 16;
-                    let formattedContent = formatMSDSText(chapter.内容, chapter.章节序号);
+                    // 传递当前化学品信息给格式化函数（特别是第15章需要）
+                    const currentChemInfo = {
+                        cas: basic.CAS号 || '',
+                        name: basic.中文名 || '',
+                        aliases: basic.所有别名 || ''
+                    };
+                    let formattedContent = formatMSDSText(chapter.内容, chapter.章节序号, currentChemInfo);
                     
                     // 渲染图片（如果有）
                     let imagesHtml = '';
@@ -3229,7 +3235,7 @@
         }
 
         // 格式化MSDS章节文本，让序号和内容在同一行
-        function formatMSDSText(text, chapterNumber = 0) {
+        function formatMSDSText(text, chapterNumber = 0, chemicalInfo = null) {
             if (!text) return '暂无数据';
             
             // 根据章节序号选择对应的格式化函数
@@ -3278,7 +3284,7 @@
                     formattedHtml = formatFourteenthChapter(text);
                     break;
                 case 15:
-                    formattedHtml = formatFifteenthChapter(text);
+                    formattedHtml = formatFifteenthChapter(text, chemicalInfo);
                     break;
                 case 16:
                     formattedHtml = formatSixteenthChapter(text);
@@ -4437,7 +4443,7 @@
         }
 
         // 格式化第十五部分：法规信息
-        function formatFifteenthChapter(text) {
+        function formatFifteenthChapter(text, chemicalInfo = null) {
             let html = '<div class="chapter-text-formatted">';
             const lines = text.split('\n').map(line => line.trim()).filter(line => line);
             
@@ -4473,25 +4479,7 @@
                 '《高毒物品目录》'
             ];
             
-            // 法规PDF映射表（法规名称关键词 -> PDF文件名）
-            // 只添加实际存在的PDF文件！
-            const regulationPdfMap = {
-                '中国现有化学物质名录（IECSC）': '名录2013年版.pdf',
-                '中国现有化学物质名录': '名录2013年版.pdf',  // 兼容不带括号的情况
-                'IECSC': '名录2013年版.pdf',  // 兼容只有缩写的情况
-                '《危险化学品目录（2015年版）》，安监总局2015年第5号公告': '危险化学品目录.pdf',
-                '《重点环境管理危险化学品目录》，环保部办公厅2014年第33号文': '重点环境管理危险化学品目录.pdf',
-                '《重点监管的危险化学品名录（2015年版）》，安监总局2015年第78号公告': '重点监管的危险化学品名录.pdf',
-                '《中国严格限制进出口的有毒化学品目录》，环保部2013年第85号公告': '中国严格限制进出口的有毒化学品目录.pdf',
-                '《药用类麻醉药品和精神药品目录》，国家药监局2025年第55号公告': '药用类麻醉药品和精神药品目录.pdf',
-                '《重点监管的危险化学品名录（第1和第2批）》，安监总局2011年第95号和2013年第12号通知': '重点监管的危险化学品名录.pdf',
-                '《易制爆危险化学品名录（2011年版）》，公安部2011年11月25日公告': '易制爆危险化学品名录.pdf',
-                '《高毒物品目录》，卫生部2003年第142号通知': '高毒物品目录.pdf',
-                '《中国进出口受控消耗臭氧层物质名录（第1到6批）》，环保部2000年至2012系列公告': '中国进出口受控消耗臭氧层物质名录.pdf',
-                // 其他法规PDF待添加后再取消注释：
-                // '危险化学品目录': '危险化学品目录2015.pdf',
-                // '高毒物品目录': '高毒物品目录.pdf',
-            };
+            // 使用全局的regulationPdfMap（已在PDF查看器状态部分定义）
             
             // "列入"和"未列入"是正常值，不应该作为标题
             const normalValues = ['列入', '未列入'];
@@ -4524,14 +4512,33 @@
                     }
                     
                     if (isClickable && pdfFile) {
-                        // 可点击的法规名称 - 自动搜索当前化学品（包括CAS号、名称、别名）
+                        // 可点击的法规名称 - 将化学品信息编码到data属性中
                         const escapedLine = line.replace(/'/g, "\\'");
-                        html += `<div class="msds-field-label regulation-link" 
-                                      style="margin-top: 10px; margin-bottom: 8px; cursor: pointer;" 
-                                      onclick="openPdfViewerWithSearch('${pdfFile}', '${escapedLine}')"
-                                      title="点击查看PDF文件并自动搜索该化学品（含别名）">
-                                    ${line} <i class="fas fa-file-pdf"></i>
-                                </div>`;
+                        const escapedPdfFile = pdfFile.replace(/'/g, "\\'");
+                        
+                        // 如果有化学品信息，将其编码存储到data属性中
+                        if (chemicalInfo && (chemicalInfo.cas || chemicalInfo.name)) {
+                            // 使用base64编码避免特殊字符问题
+                            const chemInfoJson = JSON.stringify(chemicalInfo);
+                            const chemInfoB64 = btoa(unescape(encodeURIComponent(chemInfoJson)));
+                            
+                            html += `<div class="msds-field-label regulation-link" 
+                                          style="margin-top: 10px; margin-bottom: 8px; cursor: pointer;" 
+                                          onclick="openPdfViewerWithSearchFromElement(this, '${escapedPdfFile}', '${escapedLine}')"
+                                          data-chemical-info="${chemInfoB64}"
+                                          data-pdf-file="${escapedPdfFile}"
+                                          title="点击查看PDF文件并自动搜索该化学品（含别名）">
+                                        ${line} <i class="fas fa-file-pdf"></i>
+                                    </div>`;
+                        } else {
+                            // 没有化学品信息，使用全局变量（兼容单化学品查询）
+                            html += `<div class="msds-field-label regulation-link" 
+                                          style="margin-top: 10px; margin-bottom: 8px; cursor: pointer;" 
+                                          onclick="openPdfViewerWithSearch('${escapedPdfFile}', '${escapedLine}')"
+                                          title="点击查看PDF文件并自动搜索该化学品（含别名）">
+                                        ${line} <i class="fas fa-file-pdf"></i>
+                                    </div>`;
+                        }
                     } else {
                         // 普通小标题
                         html += `<div class="msds-field-label" style="margin-top: 10px; margin-bottom: 8px;">${line}</div>`;
@@ -5330,6 +5337,13 @@
             const basic = chem.basic_info;
             const chapters = chem.msds_chapters || [];
             
+            // 更新当前化学品信息供PDF搜索使用（多化学品查询时）
+            currentChemicalInfo = {
+                cas: basic.CAS号 || '',
+                name: basic.中文名 || '',
+                aliases: basic.所有别名 || ''
+            };
+            
             let html = `
                 <div class="basic-info" style="margin-bottom: 30px;">
                     <div class="chemical-name" style="display: flex; align-items: center; justify-content: space-between;">
@@ -5383,7 +5397,13 @@
                 
                 chapters.forEach(chapter => {
                     const hasCustomFormat = chapter.章节序号 >= 1 && chapter.章节序号 <= 16;
-                    let formattedContent = formatMSDSText(chapter.内容, chapter.章节序号);
+                    // 传递当前化学品信息给格式化函数（特别是第15章需要）
+                    const currentChemInfo = {
+                        cas: basic.CAS号 || '',
+                        name: basic.中文名 || '',
+                        aliases: basic.所有别名 || ''
+                    };
+                    let formattedContent = formatMSDSText(chapter.内容, chapter.章节序号, currentChemInfo);
                     
                     // 渲染图片（如果有）
                     let imagesHtml = '';
@@ -5446,9 +5466,14 @@
                 </div>
             `;
             
-            // 异步加载法规信息
+            // 异步加载法规信息，传递当前化学品信息
+            const currentChemInfo = {
+                cas: basic.CAS号 || '',
+                name: basic.中文名 || '',
+                aliases: basic.所有别名 || ''
+            };
             setTimeout(() => {
-                loadRegulationsForChemical(basic.编号, index);
+                loadRegulationsForChemical(basic.编号, index, currentChemInfo);
             }, 100);
             
             return html;
@@ -5473,7 +5498,7 @@
         }
 
         // 为单个化学品加载法规信息
-        async function loadRegulationsForChemical(chemicalId, index) {
+        async function loadRegulationsForChemical(chemicalId, index, chemicalInfo = null) {
             const loadingEl = document.getElementById(`regulationsLoading${index}`);
             const containerEl = document.getElementById(`regulationsContainer${index}`);
             const countEl = document.getElementById(`regulationsCount${index}`);
@@ -5493,8 +5518,8 @@
                 countEl.textContent = `(${data.total}项)`;
                 countEl.style.color = '#667eea';
                 
-                // 渲染法规列表
-                renderRegulations(data.by_category, containerEl);
+                // 渲染法规列表，传入化学品信息
+                renderRegulations(data.by_category, containerEl, chemicalInfo);
                 
             } catch (error) {
                 loadingEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> 加载失败: ${error.message}`;
@@ -6014,7 +6039,12 @@
         }
 
         // 渲染法规列表
-        function renderRegulations(byCategory, container) {
+        function renderRegulations(byCategory, container, chemicalInfo = null) {
+            // 如果有传入的化学品信息，临时更新currentChemicalInfo用于搜索
+            const savedChemicalInfo = currentChemicalInfo;
+            if (chemicalInfo) {
+                currentChemicalInfo = chemicalInfo;
+            }
             let html = '';
             
             // 按分类显示
@@ -6054,11 +6084,26 @@
                         const safeFile = reg.file.replace(/'/g, "\\'");
                         const safeName = reg.name.replace(/'/g, "\\'");
                         
+                        // 检查是否有对应的PDF文件（在pdf目录下）
+                        let pdfFile = null;
+                        for (const [keyword, pdf] of Object.entries(regulationPdfMap)) {
+                            if (reg.name.includes(keyword)) {
+                                pdfFile = pdf;
+                                break;
+                            }
+                        }
+                        
+                        // 如果有PDF文件且当前有化学品信息，使用智能搜索；否则使用普通打开
+                        const onClickFunc = (pdfFile && currentChemicalInfo && (currentChemicalInfo.cas || currentChemicalInfo.name))
+                            ? `openPdfViewerWithSearch('${pdfFile}', '${safeName}')`
+                            : `openRegulationPDF('${safeFile}', '${safeName}')`;
+                        
                         html += `
-                            <div class="regulation-item" onclick="openRegulationPDF('${safeFile}', '${safeName}')">
+                            <div class="regulation-item" onclick="${onClickFunc}">
                                 <div class="regulation-item-header">
                                     <i class="fas fa-file-pdf regulation-item-icon"></i>
                                     <span class="regulation-item-name">${reg.name}</span>
+                                    ${pdfFile && currentChemicalInfo && (currentChemicalInfo.cas || currentChemicalInfo.name) ? '<span style="font-size: 10px; color: #667eea; margin-left: 5px;">[智能搜索]</span>' : ''}
                                 </div>
                                 <div class="regulation-item-reason">${reg.reason}</div>
                             </div>
@@ -6077,6 +6122,11 @@
             }
             
             container.innerHTML = html;
+            
+            // 恢复原来的currentChemicalInfo
+            if (chemicalInfo) {
+                currentChemicalInfo = savedChemicalInfo;
+            }
         }
 
         // 打开法规PDF文件
@@ -6224,6 +6274,26 @@
             name: '',
             aliases: ''
         };
+        
+        // 法规PDF映射表（法规名称关键词 -> PDF文件名）
+        // 全局定义，供多个函数使用
+        const regulationPdfMap = {
+            '中国现有化学物质名录（IECSC）': '名录2013年版.pdf',
+            '中国现有化学物质名录': '名录2013年版.pdf',  // 兼容不带括号的情况
+            'IECSC': '名录2013年版.pdf',  // 兼容只有缩写的情况
+            '《危险化学品目录（2015年版）》，安监总局2015年第5号公告': '危险化学品目录.pdf',
+            '《重点环境管理危险化学品目录》，环保部办公厅2014年第33号文': '重点环境管理危险化学品目录.pdf',
+            '《重点监管的危险化学品名录（2015年版）》，安监总局2015年第78号公告': '重点监管的危险化学品名录.pdf',
+            '《中国严格限制进出口的有毒化学品目录》，环保部2013年第85号公告': '中国严格限制进出口的有毒化学品目录.pdf',
+            '《药用类麻醉药品和精神药品目录》，国家药监局2025年第55号公告': '药用类麻醉药品和精神药品目录.pdf',
+            '《重点监管的危险化学品名录（第1和第2批）》，安监总局2011年第95号和2013年第12号通知': '重点监管的危险化学品名录.pdf',
+            '《易制爆危险化学品名录（2011年版）》，公安部2011年11月25日公告': '易制爆危险化学品名录.pdf',
+            '《高毒物品目录》，卫生部2003年第142号通知': '高毒物品目录.pdf',
+            '《中国进出口受控消耗臭氧层物质名录（第1到6批）》，环保部2000年至2012系列公告': '中国进出口受控消耗臭氧层物质名录.pdf',
+            // 其他法规PDF待添加后再取消注释：
+            // '危险化学品目录': '危险化学品目录2015.pdf',
+            // '高毒物品目录': '高毒物品目录.pdf',
+        };
 
         let pdfDoc = null;
         let currentPageNum = 1;
@@ -6250,6 +6320,48 @@
             if (currentChemicalInfo.aliases) {
                 // 别名可能是多个，用逗号、分号或顿号分隔
                 keywordGroups.aliases = currentChemicalInfo.aliases
+                    .split(/[,，;；、\s]+/)
+                    .filter(a => {
+                        const trimmed = a.trim();
+                        // 过滤空字符串和"-"（表示无别名）
+                        return trimmed && trimmed !== '-';
+                    });
+            }
+            
+            // 调用PDF查看器，传入分组的关键词对象
+            await openPdfViewer(pdfFileName, 1, title, keywordGroups);
+        }
+        
+        // 从元素读取化学品信息并打开PDF查看器（用于多化学品查询，避免全局状态干扰）
+        async function openPdfViewerWithSearchFromElement(element, pdfFileName, title = '法规文件') {
+            const chemicalInfoB64 = element.getAttribute('data-chemical-info');
+            let chemicalInfo = null;
+            
+            if (chemicalInfoB64) {
+                try {
+                    // 解码base64
+                    const chemInfoJson = decodeURIComponent(escape(atob(chemicalInfoB64)));
+                    chemicalInfo = JSON.parse(chemInfoJson);
+                } catch (e) {
+                    console.error('解析化学品信息失败:', e, '原始字符串:', chemicalInfoB64);
+                    // 如果解析失败，使用全局变量作为后备
+                    chemicalInfo = currentChemicalInfo;
+                }
+            } else {
+                // 如果没有data属性，使用全局变量（兼容旧代码）
+                chemicalInfo = currentChemicalInfo;
+            }
+            
+            // 构建分组的搜索关键词对象
+            const keywordGroups = {
+                cas: chemicalInfo.cas || '',
+                name: chemicalInfo.name || '',
+                aliases: []
+            };
+            
+            if (chemicalInfo.aliases) {
+                // 别名可能是多个，用逗号、分号或顿号分隔
+                keywordGroups.aliases = chemicalInfo.aliases
                     .split(/[,，;；、\s]+/)
                     .filter(a => {
                         const trimmed = a.trim();

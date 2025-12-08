@@ -1,0 +1,9 @@
+# Web框架和数据库
+Flask>=2.0.0
+PyMySQL>=1.0.0
+requests>=2.25.0
+
+# 爬虫系统依赖（scrape_to_json.py需要）
+#playwright>=1.40.0
+#beautifulsoup4>=4.12.0
+

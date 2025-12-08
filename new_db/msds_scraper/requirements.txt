@@ -1,0 +1,17 @@
+# MSDS Scraper Tool Dependencies
+# Installation: pip install -r requirements.txt
+
+# HTTP request library
+requests>=2.31.0
+
+# HTML parsing library
+beautifulsoup4>=4.12.0
+
+# MySQL database connector
+pymysql>=1.1.0
+
+# Browser automation tool (for dynamic web pages)
+playwright>=1.40.0
+
+# Note: After installing playwright, you need to download browser driver
+# Run command: playwright install chromium

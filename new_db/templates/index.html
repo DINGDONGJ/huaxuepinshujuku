@@ -43,6 +43,15 @@
             opacity: 0.9;
         }
 
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
         .search-section {
             background: white;
             border-radius: 15px;
@@ -187,6 +196,77 @@
             color: #667eea;
             text-align: center;
             font-size: 14px;
+        }
+
+        /* 化学品标签样式 */
+        .selected-chemical-tag {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 8px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            transition: all 0.2s;
+            animation: tagSlideIn 0.3s ease-out;
+        }
+
+        @keyframes tagSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .selected-chemical-tag:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .selected-chemical-tag .tag-name {
+            margin-right: 8px;
+        }
+
+        .selected-chemical-tag .tag-cas {
+            opacity: 0.8;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        .selected-chemical-tag .tag-remove {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .selected-chemical-tag .tag-remove:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .search-input-wrapper {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .import-toggle-btn {
@@ -664,7 +744,7 @@
         }
 
         .chapter-item.active .chapter-content {
-            max-height: 15000px;
+            max-height: 15000px !important;
             transition: max-height 0.6s ease-in;
         }
 
@@ -1076,10 +1156,32 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .regulations-title:hover {
+            color: #667eea;
         }
 
         .regulations-title .fas {
             color: #667eea;
+        }
+
+        .regulations-toggle-icon {
+            margin-left: auto;
+            font-size: 14px;
+            color: #94a3b8;
+            transition: transform 0.3s ease, color 0.2s;
+        }
+
+        .regulations-title:hover .regulations-toggle-icon {
+            color: #667eea;
+        }
+
+        .regulations-title.collapsed .regulations-toggle-icon {
+            transform: rotate(-90deg);
         }
 
         .regulations-count {
@@ -1103,6 +1205,21 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            max-height: none;
+            overflow: visible;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+
+        .regulations-container.collapsed {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .regulations-loading.collapsed {
+            display: none;
         }
 
         .regulation-category {
@@ -2618,6 +2735,136 @@
         .pdf-sidebar-toggle .fas {
             font-size: 18px;
         }
+
+        /* ============================================================================
+           智能章节定位样式
+           ============================================================================ */
+        
+        /* 章节高亮样式 */
+        .chapter-highlight {
+            background-color: #fff3cd !important;
+            border-left: 4px solid #ffc107 !important;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3) !important;
+            transition: all 0.3s ease;
+        }
+        
+        /* 闪烁动画 */
+        @keyframes highlight-flash {
+            0%, 100% { 
+                background-color: transparent; 
+                box-shadow: none;
+            }
+            50% { 
+                background-color: #fff3cd; 
+                box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+            }
+        }
+        
+        .highlight-flash {
+            animation: highlight-flash 0.6s ease 3;
+        }
+        
+        /* 关键词高亮 */
+        .keyword-highlight {
+            background-color: #ffeb3b;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #333;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 智能通知样式 */
+        .smart-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 16px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            opacity: 0;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+        }
+        
+        .smart-notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .smart-notification-success {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .smart-notification-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .smart-notification-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .smart-notification-error {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .smart-notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .smart-notification-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .smart-notification-message {
+            font-size: 15px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+        
+        /* 章节标题增强（当被定位时） */
+        .chapter-highlight .chapter-title-wrapper {
+            position: relative;
+        }
+        
+        .chapter-highlight .chapter-title-wrapper::before {
+            content: '🎯';
+            position: absolute;
+            left: -30px;
+            font-size: 20px;
+            animation: pulse 1.5s ease infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.2); 
+                opacity: 0.8;
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .smart-notification {
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                max-width: none;
+            }
+        }
     </style>
     <!-- Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2649,7 +2896,8 @@
             <button class="sidebar-close" onclick="toggleSidebar()">×</button>
         </div>
         
-        <div class="list-stats" id="listStats">
+        <!-- 隐藏化学品数量统计 -->
+        <div class="list-stats" id="listStats" style="display: none;">
             <span id="statsText">加载中...</span>
         </div>
         
@@ -2734,11 +2982,14 @@
         <div class="search-section">
             <div class="search-box">
                 <div class="search-input-wrapper">
-                <input 
-                    type="text" 
-                    class="search-input" 
-                    id="searchInput" 
-                    placeholder="请输入化学品中文名、英文名、CAS号或别名..."
+                    <!-- 化学品标签容器 -->
+                    <div id="selectedChemicalTag" style="display: none;"></div>
+                    
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="searchInput" 
+                        placeholder="请输入化学品中文名、英文名、CAS号或别名..."
                         onkeydown="handleSearchKeydown(event)"
                         oninput="handleSearchInput()"
                         onfocus="handleSearchFocus()"
@@ -2748,7 +2999,7 @@
                     <!-- 自动补全候选列表 -->
                     <div class="autocomplete-list" id="autocompleteList"></div>
                 </div>
-                <button class="search-btn" onclick="search()"><i class="fas fa-search"></i> 查询</button>
+                <button class="search-btn" onclick="search()"><i class="fas fa-search"></i> 化学品查询</button>
                 <button class="compare-toggle-btn" onclick="openCompareModal()">
                     <i class="fas fa-brain"></i> 智能多化学品查询
                 </button>
@@ -2759,7 +3010,8 @@
                 <i class="fas fa-lightbulb"></i> 支持查询：中文名（如：甲醛）、英文名（如：formaldehyde）、CAS号（如：50-00-0）、别名（如：福尔马林）
             </div>
             
-            <button class="import-toggle-btn" onclick="toggleImport()">
+            <!-- 导入MSDS数据按钮已隐藏，只允许后端管理 -->
+            <button class="import-toggle-btn" onclick="toggleImport()" style="display: none;">
                 <i class="fas fa-upload"></i> 导入MSDS数据
             </button>
             
@@ -2822,12 +3074,58 @@
         </div>
     </div>
 
+    <footer class="footer">
+        <p style="margin: 0;">Copyright © 2024-2025 易链科技有限公司 版权所有</p>
+    </footer>
+
     <script>
         // ==================== 自动补全相关功能 ====================
         
         let autocompleteTimer = null;
         let autocompleteSelectedIndex = -1;
         let autocompleteItems = [];
+        
+        // ==================== 化学品标签管理 ====================
+        let selectedChemical = null;  // 存储选中的化学品对象
+        
+        // 创建化学品标签
+        function createChemicalTag(chemical) {
+            selectedChemical = chemical;
+            
+            const tagContainer = document.getElementById('selectedChemicalTag');
+            const searchInput = document.getElementById('searchInput');
+            
+            // 创建标签HTML
+            tagContainer.innerHTML = `
+                <div class="selected-chemical-tag">
+                    <span class="tag-name">${chemical.中文名}</span>
+                    <span class="tag-cas">${chemical.CAS号 || ''}</span>
+                    <button class="tag-remove" onclick="removeChemicalTag()" title="删除">✕</button>
+                </div>
+            `;
+            tagContainer.style.display = 'inline-flex';
+            
+            // 修改输入框占位符
+            searchInput.placeholder = '输入额外查询（如：的密度、的危险性）或直接搜索...';
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        
+        // 删除化学品标签
+        function removeChemicalTag() {
+            selectedChemical = null;
+            
+            const tagContainer = document.getElementById('selectedChemicalTag');
+            const searchInput = document.getElementById('searchInput');
+            
+            tagContainer.innerHTML = '';
+            tagContainer.style.display = 'none';
+            
+            // 恢复输入框占位符
+            searchInput.placeholder = '请输入化学品中文名、英文名、CAS号或别名...';
+            searchInput.value = '';
+            searchInput.focus();
+        }
         
         // 处理搜索框输入
         function handleSearchInput() {
@@ -2837,6 +3135,12 @@
             // 清除之前的定时器
             if (autocompleteTimer) {
                 clearTimeout(autocompleteTimer);
+            }
+            
+            // 如果已经选择了化学品标签，不触发autocomplete（用户在输入额外查询词）
+            if (selectedChemical) {
+                hideAutocomplete();
+                return;
             }
             
             // 如果输入为空，隐藏候选列表
@@ -2910,11 +3214,10 @@
         function selectAutocomplete(index) {
             if (index >= 0 && index < autocompleteItems.length) {
                 const item = autocompleteItems[index];
-                document.getElementById('searchInput').value = item.中文名;
-                hideAutocomplete();
                 
-                // 自动执行搜索
-                search();
+                // 创建化学品标签
+                createChemicalTag(item);
+                hideAutocomplete();
             }
         }
         
@@ -2999,13 +3302,76 @@
         // ==================== 原有搜索功能 ====================
         
         async function search() {
-            const keyword = document.getElementById('searchInput').value.trim();
+            const searchInput = document.getElementById('searchInput');
+            const additionalQuery = searchInput.value.trim();
             
-            if (!keyword) {
-                alert('请输入搜索关键词');
-                return;
+            // 判断是否有选中的化学品标签
+            if (selectedChemical) {
+                // 模式1：使用选中的化学品 + 额外查询词
+                searchWithTag(selectedChemical, additionalQuery);
+            } else {
+                // 模式2：传统的关键词搜索
+                if (!additionalQuery) {
+                    alert('请输入搜索关键词或先选择化学品');
+                    return;
+                }
+                searchWithKeyword(additionalQuery);
             }
+        }
+        
+        // 使用化学品标签搜索
+        async function searchWithTag(chemical, additionalQuery) {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.innerHTML = '<div class="loading">正在查询化学品信息...</div>';
+            resultsSection.classList.add('show');
 
+            try {
+                // 直接使用化学品的中文名或CAS号搜索（确保找到）
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        keyword: chemical.CAS号 || chemical.中文名,
+                        additional_query: additionalQuery  // 传递额外查询词用于章节定位
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResults(data);
+                    
+                    // ✨ 如果有额外查询词，进行智能章节定位
+                    if (additionalQuery) {
+                        console.log('🎯 使用额外查询词进行定位:', additionalQuery);
+                        // 基于额外查询词定位章节
+                        setTimeout(() => {
+                            locateChapterByQuery(additionalQuery);
+                        }, 800);
+                    } else if (data.query_analysis && data.query_analysis.target_chapters && data.query_analysis.target_chapters.length > 0) {
+                        // 使用后端返回的智能定位
+                        setTimeout(() => {
+                            smartScrollToChapter(data.query_analysis);
+                        }, 800);
+                    }
+                } else {
+                    resultsSection.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-times-circle"></i> ${data.error || '查询失败，请重试'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsSection.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-times-circle"></i> 网络错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // 使用关键词搜索（原有逻辑）
+        async function searchWithKeyword(keyword) {
             const resultsSection = document.getElementById('resultsSection');
             resultsSection.innerHTML = '<div class="loading">正在查询</div>';
             resultsSection.classList.add('show');
@@ -3021,6 +3387,22 @@
 
                 if (response.ok) {
                     displayResults(data);
+                    
+                    // ✨ 智能章节定位功能
+                    if (data.query_analysis && data.query_analysis.target_chapters && data.query_analysis.target_chapters.length > 0) {
+                        console.log('🎯 检测到智能定位需求:', data.query_analysis);
+                        
+                        // 延迟执行，确保DOM完全渲染（增加到800ms）
+                        setTimeout(() => {
+                            console.log('⏰ DOM渲染完成，开始执行智能定位...');
+                            smartScrollToChapter(data.query_analysis);
+                        }, 800);
+                    }
+                    
+                    // 显示搜索方式提示
+                    if (data.search_type === 'semantic') {
+                        showSmartNotification('🤖 使用了语义搜索找到结果', 'info');
+                    }
                 } else {
                     resultsSection.innerHTML = `
                         <div class="error-message">
@@ -3068,9 +3450,12 @@
                             <button class="regulation-query-btn" onclick="queryRegulation('${basic.中文名.replace(/'/g, "\\'")}');">
                                 <i class="fas fa-gavel"></i> 法规查询
                             </button>
+                        <!-- 删除化学品按钮已隐藏，只允许后端管理 -->
+                        <!--
                         <button class="delete-btn" onclick="showDeleteConfirm(${basic.编号}, '${basic.中文名.replace(/'/g, "\\'")}', '${basic.CAS号 || ''}', function() { document.getElementById('searchInput').value = ''; });">
                                 <i class="fas fa-trash-alt"></i> 删除化学品
                         </button>
+                        -->
                         </div>
                     </div>
                     
@@ -3133,6 +3518,7 @@
                         aliases: basic.所有别名 || ''
                     };
                     let formattedContent = formatMSDSText(chapter.内容, chapter.章节序号, currentChemInfo);
+                    const chapterTitle = chapter.章节序号 === 1 ? '化学品标识' : (chapter.章节标题 || '');
                     
                     // 渲染图片（如果有）
                     let imagesHtml = '';
@@ -3168,7 +3554,7 @@
                             <div class="chapter-header" onclick="toggleChapter(this)">
                                 <div class="chapter-title-wrapper">
                                     <div class="chapter-number">${chapter.章节序号}</div>
-                                    <div class="chapter-title">${chapter.章节标题}</div>
+                                    <div class="chapter-title">${chapterTitle}</div>
                                 </div>
                                 <div class="chapter-icon">▼</div>
                             </div>
@@ -3187,17 +3573,18 @@
                 `;
             }
 
-            // 添加相关法规区域
+            // 添加相关法规区域（默认折叠）
             html += `
                 <div class="regulations-section" id="regulationsSection">
-                    <h2 class="regulations-title">
+                    <h2 class="regulations-title collapsed" onclick="toggleRegulationsSection()">
                         <i class="fas fa-balance-scale"></i> 相关法律法规
                         <span class="regulations-count" id="regulationsCount">加载中...</span>
+                        <span class="regulations-toggle-icon">▼</span>
                     </h2>
                     <div class="regulations-loading" id="regulationsLoading">
                         <i class="fas fa-spinner fa-spin"></i> 正在加载法规信息...
                     </div>
-                    <div class="regulations-container" id="regulationsContainer"></div>
+                    <div class="regulations-container collapsed" id="regulationsContainer"></div>
                 </div>
             `;
 
@@ -3216,7 +3603,385 @@
             // 找到父元素 chapter-item
             const chapterItem = headerElement.closest('.chapter-item');
             if (chapterItem) {
+                const wasActive = chapterItem.classList.contains('active');
                 chapterItem.classList.toggle('active');
+                const isActive = chapterItem.classList.contains('active');
+                
+                console.log(`🔄 切换章节: ${chapterItem.getAttribute('data-chapter-number')}`);
+                console.log(`   状态变化: ${wasActive ? '展开' : '折叠'} → ${isActive ? '展开' : '折叠'}`);
+            }
+        }
+
+        // ============================================================================
+        // 智能章节定位功能
+        // ============================================================================
+        
+        /**
+         * 基于额外查询词定位章节（简化版）
+         * @param {string} query - 额外查询词（如："的密度"、"的危险性"）
+         */
+        function locateChapterByQuery(query) {
+            // 查询词 → 目标章节映射表
+            const queryChapterMap = [
+                // 物理化学性质（第9章）
+                { patterns: ['密度', '比重', '沸点', '熔点', '闪点', '蒸气压', '溶解度', '物理', '性质', '外观', '颜色'], chapter: 9 },
+                
+                // 危险性概述（第2章）
+                { patterns: ['危险', '危害', '毒性', '爆炸', '燃烧', '易燃', '腐蚀', '刺激'], chapter: 2 },
+                
+                // 急救措施（第4章）
+                { patterns: ['急救', '中毒', '接触', '吸入', '眼睛', '皮肤', '误食'], chapter: 4 },
+                
+                // 防护措施（第8章）
+                { patterns: ['防护', '手套', '呼吸器', '护目镜', '防护服', '个人防护'], chapter: 8 },
+                
+                // 储存（第7章）
+                { patterns: ['储存', '贮存', '保存', '存放', '仓库'], chapter: 7 },
+                
+                // 泄漏应急处理（第6章）
+                { patterns: ['泄漏', '泄露', '应急', '溢出', '清理'], chapter: 6 },
+                
+                // 稳定性和反应性（第10章）
+                { patterns: ['稳定', '反应', '禁配', '分解', '聚合', '不相容'], chapter: 10 },
+                
+                // 毒理学（第11章）
+                { patterns: ['毒理', 'LD50', 'LC50', '致癌', '致畸'], chapter: 11 },
+                
+                // 生态学（第12章）
+                { patterns: ['生态', '环境', '水生', '生物降解'], chapter: 12 },
+                
+                // 运输信息（第14章）
+                { patterns: ['运输', 'UN', '包装', '标志'], chapter: 14 },
+                
+                // 法规信息（第15章）
+                { patterns: ['法规', '法律', '标准', '监管'], chapter: 15 }
+            ];
+            
+            // 去除"的"等助词
+            const cleanQuery = query.replace(/^(的|是|有|会|能)+|^(的|是|有|会|能)+$/g, '').trim();
+            
+            console.log('🔍 额外查询词定位:', cleanQuery);
+            
+            // 匹配目标章节
+            for (const mapping of queryChapterMap) {
+                for (const pattern of mapping.patterns) {
+                    if (cleanQuery.includes(pattern)) {
+                        console.log(`✅ 匹配到关键词 "${pattern}"，定位到第 ${mapping.chapter} 章`);
+                        
+                        // 使用简化的定位逻辑
+                        const queryAnalysis = {
+                            target_chapters: [mapping.chapter],
+                            keywords: [pattern],
+                            intent: `查询${pattern}相关信息`
+                        };
+                        
+                        smartScrollToChapter(queryAnalysis);
+                        return;
+                    }
+                }
+            }
+            
+            // 如果没有匹配到，显示提示
+            console.log('ℹ️ 未匹配到特定章节，显示完整MSDS');
+            showSmartNotification('💡 显示完整MSDS信息', 'info');
+        }
+        
+        /**
+         * 智能滚动到目标章节
+         * @param {Object} queryAnalysis - 查询分析结果
+         */
+        function smartScrollToChapter(queryAnalysis) {
+            const targetChapters = queryAnalysis.target_chapters || [];
+            const keywords = queryAnalysis.keywords || [];
+            const intent = queryAnalysis.intent || '';
+            
+            if (targetChapters.length === 0) {
+                console.warn('⚠️  没有目标章节');
+                return;
+            }
+            
+            console.log('🎯 开始智能定位:', queryAnalysis);
+            
+            // 获取第一个目标章节
+            const primaryChapter = targetChapters[0];
+            
+            // 1. 立即展开目标章节（确保章节可见）
+            const expanded = expandChapter(primaryChapter);
+            
+            // 如果第一次展开失败，延迟重试
+            if (!expanded) {
+                console.log('⏰ 第一次展开失败，200ms后重试...');
+                setTimeout(() => {
+                    const retryExpanded = expandChapter(primaryChapter);
+                    if (!retryExpanded) {
+                        console.error('❌ 重试展开仍然失败');
+                    }
+                }, 200);
+            }
+            
+            // 2. 高亮显示所有目标章节
+            highlightChapters(targetChapters);
+            
+            // 3. 等待展开动画完成后再滚动
+            setTimeout(() => {
+                console.log('📜 开始滚动到章节...');
+                scrollToChapter(primaryChapter);
+            }, 500);
+            
+            // 4. 高亮关键词（等待滚动完成）
+            if (keywords.length > 0) {
+                setTimeout(() => {
+                    console.log('🎨 开始高亮关键词...');
+                    highlightKeywordsInChapter(primaryChapter, keywords);
+                }, 900);
+            }
+            
+            // 5. 显示智能提示
+            showChapterLocationNotification(targetChapters, intent);
+        }
+        
+        /**
+         * 展开指定章节
+         */
+        function expandChapter(chapterNumber) {
+            console.log(`🔍 尝试展开第 ${chapterNumber} 章...`);
+            
+            const chapterElement = document.querySelector(`[data-chapter-number="${chapterNumber}"]`);
+            
+            if (!chapterElement) {
+                console.error(`❌ 章节 ${chapterNumber} 未找到！`);
+                console.log('📋 当前页面所有章节:', 
+                    Array.from(document.querySelectorAll('[data-chapter-number]'))
+                        .map(el => el.getAttribute('data-chapter-number'))
+                );
+                return false;
+            }
+            
+            console.log(`📍 找到章节元素:`, chapterElement);
+            console.log(`📊 展开前类名:`, chapterElement.className);
+            
+            // 添加 active 类来展开章节
+            chapterElement.classList.add('active');
+            
+            // 验证是否成功添加
+            const hasActive = chapterElement.classList.contains('active');
+            console.log(`✅ 展开状态: ${hasActive ? '成功' : '失败'}`);
+            console.log(`📊 展开后类名:`, chapterElement.className);
+            
+            // 强制触发重绘（确保CSS动画生效）
+            chapterElement.offsetHeight;
+            
+            // 延迟检查状态是否被改变
+            setTimeout(() => {
+                const stillActive = chapterElement.classList.contains('active');
+                if (!stillActive) {
+                    console.error(`⚠️  警告：章节 ${chapterNumber} 的active类在100ms后被移除了！`);
+                    console.log(`📊 当前类名:`, chapterElement.className);
+                    // 尝试重新添加
+                    chapterElement.classList.add('active');
+                    console.log(`🔄 已重新添加active类`);
+                } else {
+                    console.log(`✅ 章节 ${chapterNumber} 保持展开状态`);
+                }
+            }, 100);
+            
+            return hasActive;
+        }
+        
+        /**
+         * 滚动到指定章节
+         */
+        function scrollToChapter(chapterNumber) {
+            const chapterElement = document.querySelector(`[data-chapter-number="${chapterNumber}"]`);
+            if (chapterElement) {
+                // 平滑滚动
+                chapterElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                    inline: 'nearest'
+                });
+                
+                // 添加闪烁动画
+                chapterElement.classList.add('highlight-flash');
+                setTimeout(() => {
+                    chapterElement.classList.remove('highlight-flash');
+                }, 2000);
+            }
+        }
+        
+        /**
+         * 高亮显示多个章节
+         */
+        function highlightChapters(chapterNumbers) {
+            // 移除之前的高亮
+            document.querySelectorAll('.chapter-highlight').forEach(el => {
+                el.classList.remove('chapter-highlight');
+            });
+            
+            // 添加新的高亮
+            chapterNumbers.forEach(num => {
+                const chapterElement = document.querySelector(`[data-chapter-number="${num}"]`);
+                if (chapterElement) {
+                    chapterElement.classList.add('chapter-highlight');
+                }
+            });
+            
+            // 3秒后移除高亮
+            setTimeout(() => {
+                document.querySelectorAll('.chapter-highlight').forEach(el => {
+                    el.classList.remove('chapter-highlight');
+                });
+            }, 3000);
+        }
+        
+        /**
+         * 在章节中高亮关键词
+         */
+        function highlightKeywordsInChapter(chapterNumber, keywords) {
+            const chapterElement = document.querySelector(`[data-chapter-number="${chapterNumber}"]`);
+            if (!chapterElement || keywords.length === 0) return;
+            
+            const contentElement = chapterElement.querySelector('.chapter-body');
+            if (!contentElement) return;
+            
+            let html = contentElement.innerHTML;
+            
+            // 高亮每个关键词
+            keywords.forEach(keyword => {
+                if (!keyword || keyword.length < 2) return;
+                
+                // 创建正则表达式，忽略大小写
+                const regex = new RegExp(`(${escapeRegExp(keyword)})`, 'gi');
+                
+                // 替换为高亮标记（避免重复高亮）
+                html = html.replace(regex, '<mark class="keyword-highlight">$1</mark>');
+            });
+            
+            contentElement.innerHTML = html;
+        }
+        
+        /**
+         * 转义正则表达式特殊字符
+         */
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+        
+        /**
+         * 显示章节定位通知
+         */
+        function showChapterLocationNotification(chapterNumbers, intent) {
+            const chapterNames = chapterNumbers.map(num => {
+                const chapterElement = document.querySelector(`[data-chapter-number="${num}"]`);
+                if (chapterElement) {
+                    const titleElement = chapterElement.querySelector('.chapter-title');
+                    return titleElement ? `第${num}章（${titleElement.textContent}）` : `第${num}章`;
+                }
+                return `第${num}章`;
+            }).join('、');
+            
+            const intentText = getIntentText(intent);
+            const message = intentText 
+                ? `🎯 ${intentText}，已自动定位到：${chapterNames}`
+                : `🎯 已自动定位到相关章节：${chapterNames}`;
+            
+            showSmartNotification(message, 'success', 5000);
+        }
+        
+        /**
+         * 获取意图文本
+         */
+        function getIntentText(intent) {
+            const intentMap = {
+                'spill': '查询泄漏处理',
+                'waste': '查询废弃处置',
+                'toxicity': '查询毒性信息',
+                'hazard': '查询危险性信息',
+                'properties': '查询理化性质',
+                'storage': '查询储存条件',
+                'transport': '查询运输要求',
+                'first_aid': '查询急救措施',
+                'protection': '查询防护措施',
+                'fire': '查询消防措施',
+                'stability': '查询稳定性信息'
+            };
+            return intentMap[intent] || '';
+        }
+        
+        /**
+         * 显示智能通知
+         */
+        function showSmartNotification(message, type = 'info', duration = 3000) {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = `smart-notification smart-notification-${type}`;
+            notification.innerHTML = `
+                <div class="smart-notification-content">
+                    <span class="smart-notification-icon">${getNotificationIcon(type)}</span>
+                    <span class="smart-notification-message">${message}</span>
+                </div>
+            `;
+            
+            // 添加到页面
+            document.body.appendChild(notification);
+            
+            // 显示动画
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            // 自动隐藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, duration);
+        }
+        
+        /**
+         * 获取通知图标
+         */
+        function getNotificationIcon(type) {
+            const icons = {
+                'success': '✅',
+                'info': 'ℹ️',
+                'warning': '⚠️',
+                'error': '❌'
+            };
+            return icons[type] || 'ℹ️';
+        }
+
+        // 切换相关法律法规区域的展开/折叠（单化学品查询）
+        function toggleRegulationsSection() {
+            const titleEl = document.getElementById('regulationsSection').querySelector('.regulations-title');
+            const containerEl = document.getElementById('regulationsContainer');
+            const loadingEl = document.getElementById('regulationsLoading');
+            
+            if (titleEl && containerEl) {
+                titleEl.classList.toggle('collapsed');
+                containerEl.classList.toggle('collapsed');
+                if (loadingEl) {
+                    loadingEl.classList.toggle('collapsed');
+                }
+            }
+        }
+
+        // 切换相关法律法规区域的展开/折叠（多化学品查询）
+        function toggleRegulationsSectionByIndex(index) {
+            const sectionEl = document.getElementById(`regulationsSection${index}`);
+            if (!sectionEl) return;
+            
+            const titleEl = sectionEl.querySelector('.regulations-title');
+            const containerEl = document.getElementById(`regulationsContainer${index}`);
+            const loadingEl = document.getElementById(`regulationsLoading${index}`);
+            
+            if (titleEl && containerEl) {
+                titleEl.classList.toggle('collapsed');
+                containerEl.classList.toggle('collapsed');
+                if (loadingEl) {
+                    loadingEl.classList.toggle('collapsed');
+                }
             }
         }
 
@@ -3312,7 +4077,7 @@
             return highlightCASNumbers(text);
         }
 
-        // 格式化第一部分：化学品及企业标识
+        // 格式化第一部分：化学品标识
         function formatFirstChapter(text) {
             /* ============================================================
                暂时隐藏企业信息功能
@@ -3453,7 +4218,14 @@
                     } else if (line === 'GHS标签要素') {
                         inGhsCategory = false;
                     }
-                    html += `<div class="msds-section-title" style="margin-top: 20px;">${line}</div>`;
+                    
+                    // 在"危险性说明"标题后添加依据说明（同一行）
+                    if (line === '危险性说明') {
+                        html += `<div class="msds-section-title" style="margin-top: 20px;">${line} <span style="color: #666; font-size: 13px; font-style: italic; font-weight: normal;">依据《GB-T 32374-2015 化学品危险信息短语与代码》</span></div>`;
+                    } else {
+                        html += `<div class="msds-section-title" style="margin-top: 20px;">${line}</div>`;
+                    }
+                    
                     continue;
                 }
                 
@@ -4522,14 +5294,14 @@
                             const chemInfoJson = JSON.stringify(chemicalInfo);
                             const chemInfoB64 = btoa(unescape(encodeURIComponent(chemInfoJson)));
                             
-                            html += `<div class="msds-field-label regulation-link" 
-                                          style="margin-top: 10px; margin-bottom: 8px; cursor: pointer;" 
+                        html += `<div class="msds-field-label regulation-link" 
+                                      style="margin-top: 10px; margin-bottom: 8px; cursor: pointer;" 
                                           onclick="openPdfViewerWithSearchFromElement(this, '${escapedPdfFile}', '${escapedLine}')"
                                           data-chemical-info="${chemInfoB64}"
                                           data-pdf-file="${escapedPdfFile}"
-                                          title="点击查看PDF文件并自动搜索该化学品（含别名）">
-                                        ${line} <i class="fas fa-file-pdf"></i>
-                                    </div>`;
+                                      title="点击查看PDF文件并自动搜索该化学品（含别名）">
+                                    ${line} <i class="fas fa-file-pdf"></i>
+                                </div>`;
                         } else {
                             // 没有化学品信息，使用全局变量（兼容单化学品查询）
                             html += `<div class="msds-field-label regulation-link" 
@@ -4984,246 +5756,128 @@
             }
         }
 
+        // 格式化化学式：将数字转换为下标
+        function formatChemicalFormula(text) {
+            if (!text) return text;
+            
+            // 匹配化学式中的数字，将其转换为下标
+            // 例如：H2O -> H<sub>2</sub>O, CH3COOH -> CH<sub>3</sub>COOH
+            // 处理括号内外的数字：(CH2O)3 -> (CH<sub>2</sub>O)<sub>3</sub>
+            return text.replace(/([A-Z][a-z]?)?(\d+)/g, function(match, letter, number) {
+                if (letter) {
+                    return letter + '<sub>' + number + '</sub>';
+                }
+                return match;
+            }).replace(/\)(\d+)/g, ')<sub>$1</sub>');
+        }
+
         // 显示AI分析报告
         function displayAIReport(report, usage, selectedNames) {
             const aiSection = document.getElementById('aiAnalysisSection');
-            
-            const riskColors = {
-                '极高风险': '#e74c3c',
-                '高风险': '#e67e22',
-                '中等风险': '#f39c12',
-                '低风险': '#27ae60'
-            };
-            
-            const riskColor = riskColors[report.compatibility.risk_level] || '#95a5a6';
-            const canCoexist = report.compatibility.can_coexist;
-            
-            // 构建化学品名称字符串（用加号连接）
-            const chemicalNamesStr = selectedNames && selectedNames.length > 0 
-                ? ' - ' + selectedNames.join(' + ')
+
+            if (!report || typeof report !== 'object') {
+                aiSection.innerHTML = `
+                    <div class="error-message" style="margin-top: 20px;">
+                        <i class="fas fa-times-circle"></i> AI分析结果缺失或格式不正确
+                    </div>
+                `;
+                return;
+            }
+
+            // 解析新的3级风险等级
+            const riskLevel = report.risk_level || 'safe';
+            const reason = formatChemicalFormula(report.reason || '系统未提供具体说明。');
+            const conditions = formatChemicalFormula(report.conditions || '');
+            const reactions = Array.isArray(report.reactions) ? report.reactions.filter(item => typeof item === 'string' && item.trim()).map(r => formatChemicalFormula(r)) : [];
+            const chemicalNamesStr = selectedNames && selectedNames.length > 0
+                ? selectedNames.join(' + ')
                 : '';
+
+            // 根据风险等级设置显示样式
+            let statusColor, statusText, statusIcon, statusBgGradient;
             
-            // 开始构建HTML
+            if (riskLevel === 'safe') {
+                statusColor = '#10b981';  // 绿色
+                statusText = '安全共存';
+                statusIcon = '✅';
+                statusBgGradient = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
+            } else if (riskLevel === 'conditional') {
+                statusColor = '#f59e0b';  // 橙色
+                statusText = '需谨慎共存';
+                statusIcon = '⚠️';
+                statusBgGradient = 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)';
+            } else {  // incompatible
+                statusColor = '#ef4444';  // 红色
+                statusText = '严禁共存';
+                statusIcon = '❌';
+                statusBgGradient = 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)';
+            }
+
             let html = `
-                <div id="aiReportContainer" style="margin-bottom: 30px; padding: 25px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="margin: 0; color: #2c3e50; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <span style="display: flex; align-items: center; gap: 10px;">
-                                <i class="fas fa-robot" style="color: #667eea;"></i>
-                                AI智能分析报告
-                            </span>
-                            <span style="font-size: 16px; color: #667eea; font-weight: 500;">${chemicalNamesStr}</span>
+                <div id="aiReportContainer" style="margin-bottom: 30px; padding: 25px; background: ${statusBgGradient}; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <h2 style="margin: 0; color: #1f2937; display: flex; align-items: center; gap: 10px; font-size: 20px;">
+                            <i class="fas fa-robot" style="color: #6366f1;"></i>
+                            AI智能分析结果
                         </h2>
-                        <button onclick="toggleAIReport()" 
-                                style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s;">
-                            <i class="fas fa-chevron-up" id="aiReportToggleIcon"></i>
-                            <span id="aiReportToggleText">折叠报告</span>
-                        </button>
+                        ${chemicalNamesStr ? `<div style="color: #4b5563; font-size: 14px;">分析化学品：${chemicalNamesStr}</div>` : ''}
                     </div>
-                    
-                    <div id="aiReportContent">
-                    
-                    <!-- 总结 -->
-                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid ${riskColor};">
-                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">📊 评估总结</h3>
-                        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #555;">${report.summary}</p>
-                    </div>
-                    
-                    <!-- 风险等级 -->
-                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                            <div>
-                                <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">🔬 共存安全性评估</h3>
-                                <div style="font-size: 24px; font-weight: bold; color: ${riskColor}; margin-bottom: 5px;">
-                                    ${report.compatibility.risk_level}
-                                </div>
-                                <div style="color: #7f8c8d;">
-                                    风险评分: ${report.compatibility.risk_score}/100
-                                </div>
-                            </div>
-                            <div style="font-size: 48px;">
-                                ${canCoexist ? '✅' : '❌'}
-                            </div>
+
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 18px; background: white; border-radius: 10px; border-left: 4px solid ${statusColor}; margin-bottom: 20px;">
+                        <div style="font-size: 32px; line-height: 1;">${statusIcon}</div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 14px; color: #6b7280;">风险等级</div>
+                            <div style="font-size: 18px; font-weight: 600; color: ${statusColor};">${statusText}</div>
                         </div>
+                    </div>
+
+                    <div style="background: white; padding: 18px; border-radius: 10px; margin-bottom: ${conditions || reactions.length ? '20px' : '0'};">
+                        <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #1f2937;">
+                            <i class="fas fa-info-circle" style="color: ${statusColor}; margin-right: 5px;"></i>
+                            原因说明
+                        </h3>
+                        <p style="margin: 0; color: #4b5563; line-height: 1.6;">${reason}</p>
+                    </div>
             `;
-            
-            // 不相容原因
-            if (report.compatibility.incompatible_reasons && report.compatibility.incompatible_reasons.length > 0) {
+
+            // 如果是conditional级别，显示安全条件
+            if (riskLevel === 'conditional' && conditions) {
                 html += `
-                        <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
-                            <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 14px;">⚠️ 不相容原因：</h4>
-                            <ul style="margin: 0; padding-left: 20px; color: #555;">
-                `;
-                report.compatibility.incompatible_reasons.forEach(r => {
-                    html += `<li style="margin-bottom: 5px;">${r}</li>`;
-                });
-                html += `
-                            </ul>
-                        </div>
+                    <div style="background: white; padding: 18px; border-radius: 10px; margin-bottom: ${reactions.length ? '20px' : '0'}; border-left: 3px solid #f59e0b;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #1f2937;">
+                            <i class="fas fa-shield-alt" style="color: #f59e0b; margin-right: 5px;"></i>
+                            安全条件
+                        </h3>
+                        <p style="margin: 0; color: #4b5563; line-height: 1.6; font-weight: 500;">${conditions}</p>
+                    </div>
                 `;
             }
-            
-            // 具体风险
-            if (report.compatibility.specific_risks && report.compatibility.specific_risks.length > 0) {
+
+            // 显示化学反应（如果有）
+            if (reactions.length > 0) {
                 html += `
-                        <div style="margin-top: 15px; padding: 15px; background: #fee; border-radius: 6px; border-left: 4px solid #e74c3c;">
-                            <h4 style="margin: 0 0 10px 0; color: #c0392b; font-size: 14px;">🔥 具体风险：</h4>
-                            <ul style="margin: 0; padding-left: 20px; color: #555;">
+                    <div style="background: white; padding: 18px; border-radius: 10px;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #1f2937;">
+                            <i class="fas fa-flask" style="color: #6366f1; margin-right: 5px;"></i>
+                            可能发生的化学反应
+                        </h3>
+                        <ul style="margin: 0; padding-left: 18px; color: #4b5563; line-height: 1.8;">
                 `;
-                report.compatibility.specific_risks.forEach(r => {
-                    html += `<li style="margin-bottom: 5px;">${r}</li>`;
+
+                reactions.forEach(reaction => {
+                    html += `<li style="margin-bottom: 8px; font-family: 'Courier New', monospace;">${reaction}</li>`;
                 });
+
                 html += `
-                            </ul>
-                        </div>
+                        </ul>
+                    </div>
                 `;
             }
-            
+
             html += `
-                    </div>
-            `;
-            
-            // 化学反应方程式（单独处理避免模板嵌套问题）
-            if (report.chemical_reactions && report.chemical_reactions.length > 0) {
-                html += `
-                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #e74c3c;">
-                        <h3 style="margin: 0 0 15px 0; color: #c0392b; font-size: 16px;">⚗️ 化学反应分析</h3>
-                `;
-                
-                report.chemical_reactions.forEach(reaction => {
-                    const dangerColors = {
-                        '剧烈': '#e74c3c',
-                        '中等': '#f39c12',
-                        '缓慢': '#3498db',
-                        '无明显反应': '#95a5a6'
-                    };
-                    const dangerColor = dangerColors[reaction.danger_level] || '#95a5a6';
-                    
-                    html += `
-                        <div style="padding: 15px; background: #fff5f5; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid ${dangerColor};">
-                            <div style="margin-bottom: 10px;">
-                                <span style="background: ${dangerColor}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                                    ${reaction.danger_level}反应
-                                </span>
-                            </div>
-                            <div style="background: white; padding: 12px; border-radius: 4px; margin-bottom: 10px; font-family: 'Courier New', monospace; font-size: 15px; color: #2c3e50; font-weight: 600;">
-                                ${reaction.equation}
-                            </div>
-                            <div style="margin-bottom: 8px; color: #555;">
-                                <strong>反应物：</strong>${reaction.reactants.join(' + ')}
-                            </div>
-                    `;
-                    
-                    if (reaction.products && reaction.products.length > 0) {
-                        html += `
-                            <div style="margin-bottom: 8px; color: #555;">
-                                <strong>生成物：</strong>${reaction.products.join('、')}
-                            </div>
-                        `;
-                    }
-                    
-                    if (reaction.conditions) {
-                        html += `
-                            <div style="margin-bottom: 8px; color: #555;">
-                                <strong>反应条件：</strong>${reaction.conditions}
-                            </div>
-                        `;
-                    }
-                    
-                    html += `
-                            <div style="color: #555; font-size: 14px; line-height: 1.6;">
-                                <strong>说明：</strong>${reaction.description}
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += `</div>`;
-            }
-            
-            // 化学品对比
-            html += `
-                    <!-- 化学品对比 -->
-                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 16px;">📋 化学品对比分析</h3>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div style="padding: 15px; background: #e8f5e9; border-radius: 6px; border-left: 4px solid #4caf50;">
-                                <h4 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 14px;">✅ 相同点：</h4>
-                                <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
-            `;
-            
-            report.comparison.similarities.forEach(s => {
-                html += `<li style="margin-bottom: 5px;">${s}</li>`;
-            });
-            
-            html += `
-                                </ul>
-                            </div>
-                            
-                            <div style="padding: 15px; background: #fff3e0; border-radius: 6px; border-left: 4px solid #ff9800;">
-                                <h4 style="margin: 0 0 10px 0; color: #e65100; font-size: 14px;">🔄 不同点：</h4>
-                                <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px;">
-            `;
-            
-            report.comparison.differences.forEach(d => {
-                html += `<li style="margin-bottom: 5px;">${d}</li>`;
-            });
-            
-            html += `
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 建议措施 -->
-                    <div style="background: white; padding: 20px; border-radius: 8px;">
-                        <h3 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 16px;">💡 AI推荐措施</h3>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 10px 0; color: #3498db; font-size: 14px;">📦 存储建议：</h4>
-                            <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px; line-height: 1.8;">
-            `;
-            
-            report.recommendations.storage.forEach(s => {
-                html += `<li style="margin-bottom: 5px;">${s}</li>`;
-            });
-            
-            html += `
-                            </ul>
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 10px 0; color: #9b59b6; font-size: 14px;">🔧 操作建议：</h4>
-                            <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px; line-height: 1.8;">
-            `;
-            
-            report.recommendations.handling.forEach(h => {
-                html += `<li style="margin-bottom: 5px;">${h}</li>`;
-            });
-            
-            html += `
-                            </ul>
-                        </div>
-                        
-                        <div>
-                            <h4 style="margin: 0 0 10px 0; color: #e74c3c; font-size: 14px;">🚨 应急措施：</h4>
-                            <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 14px; line-height: 1.8;">
-            `;
-            
-            report.recommendations.emergency.forEach(e => {
-                html += `<li style="margin-bottom: 5px;">${e}</li>`;
-            });
-            
-            html += `
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    </div>
                 </div>
             `;
-            
+
             aiSection.innerHTML = html;
         }
 
@@ -5431,12 +6085,14 @@
                         finalContent = (hasCustomFormat ? formattedContent : `<div class="chapter-text">${formattedContent}</div>`) + imagesHtml;
                     }
                     
+                    const chapterTitle = chapter.章节序号 === 1 ? '化学品标识' : (chapter.章节标题 || '');
+                    
                     html += `
                         <div class="chapter-item" id="chapter-${index}-${chapter.章节序号}">
                             <div class="chapter-header" onclick="toggleChapter(this)">
                                 <div class="chapter-title-wrapper">
                                     <div class="chapter-number">${chapter.章节序号}</div>
-                                    <div class="chapter-title">${chapter.章节标题}</div>
+                                    <div class="chapter-title">${chapterTitle}</div>
                                 </div>
                                 <div class="chapter-icon">▼</div>
                             </div>
@@ -5452,17 +6108,18 @@
                 html += '</div></div>';
             }
             
-            // 添加相关法规区域
+            // 添加相关法规区域（默认折叠）
             html += `
                 <div class="regulations-section" id="regulationsSection${index}">
-                    <h2 class="regulations-title">
+                    <h2 class="regulations-title collapsed" onclick="toggleRegulationsSectionByIndex(${index})">
                         <i class="fas fa-balance-scale"></i> 相关法律法规
                         <span class="regulations-count" id="regulationsCount${index}">加载中...</span>
+                        <span class="regulations-toggle-icon">▼</span>
                     </h2>
                     <div class="regulations-loading" id="regulationsLoading${index}">
                         <i class="fas fa-spinner fa-spin"></i> 正在加载法规信息...
                     </div>
-                    <div class="regulations-container" id="regulationsContainer${index}"></div>
+                    <div class="regulations-container collapsed" id="regulationsContainer${index}"></div>
                 </div>
             `;
             
@@ -5479,21 +6136,45 @@
             return html;
         }
 
-        // 切换化学品MSDS显示
+        // 切换化学品MSDS显示（多化学品查询）
         function toggleChemicalMSDS(index) {
             const content = document.getElementById(`chemicalMSDS${index}`);
             const btn = event.target.closest('.msds-expand-all-btn');
             const btnText = document.getElementById(`expandBtnText${index}`);
             const btnIcon = btn.querySelector('i');
             
-            if (content.style.display === 'none') {
+            const isExpanding = content.style.display === 'none';
+            
+            if (isExpanding) {
                 content.style.display = 'block';
                 btnText.textContent = '折叠MSDS';
                 btnIcon.className = 'fas fa-chevron-up';
+                
+                // 同时展开相关法律法规
+                const regulationsSection = document.getElementById(`regulationsSection${index}`);
+                if (regulationsSection) {
+                    const titleEl = regulationsSection.querySelector('.regulations-title');
+                    const containerEl = document.getElementById(`regulationsContainer${index}`);
+                    const loadingEl = document.getElementById(`regulationsLoading${index}`);
+                    if (titleEl) titleEl.classList.remove('collapsed');
+                    if (containerEl) containerEl.classList.remove('collapsed');
+                    if (loadingEl) loadingEl.classList.remove('collapsed');
+                }
             } else {
                 content.style.display = 'none';
                 btnText.textContent = '展开MSDS';
                 btnIcon.className = 'fas fa-chevron-down';
+                
+                // 同时折叠相关法律法规
+                const regulationsSection = document.getElementById(`regulationsSection${index}`);
+                if (regulationsSection) {
+                    const titleEl = regulationsSection.querySelector('.regulations-title');
+                    const containerEl = document.getElementById(`regulationsContainer${index}`);
+                    const loadingEl = document.getElementById(`regulationsLoading${index}`);
+                    if (titleEl) titleEl.classList.add('collapsed');
+                    if (containerEl) containerEl.classList.add('collapsed');
+                    if (loadingEl) loadingEl.classList.add('collapsed');
+                }
             }
         }
 
@@ -5910,11 +6591,14 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- 删除按钮已隐藏，只允许后端管理 -->
+                        <!--
                         <div class="chemical-list-item-actions">
                             <button class="action-btn-icon" onclick="event.stopPropagation(); showDeleteConfirm(${chem.编号}, '${chem.中文名.replace(/'/g, "\\'")}', '${chem.CAS号 || ''}');" title="删除">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
+                        -->
                     </div>
                 `;
             });
@@ -7184,10 +7868,11 @@
                     const navItem = document.createElement('div');
                     navItem.className = 'msds-nav-item';
                     navItem.setAttribute('data-chapter', chapter.章节序号);
-                    navItem.onclick = () => scrollToChapter(chapter.章节序号);
+                    navItem.onclick = () => scrollToChapterFromNav(chapter.章节序号);
+                    const chapterTitle = chapter.章节序号 === 1 ? '化学品标识' : (chapter.章节标题 || '');
                     navItem.innerHTML = `
                         <div class="msds-nav-number">${chapter.章节序号}</div>
-                        <div class="msds-nav-title">${chapter.章节标题}</div>
+                        <div class="msds-nav-title">${chapterTitle}</div>
                     `;
                     navList.appendChild(navItem);
                 });
@@ -7222,10 +7907,11 @@
                 const navItem = document.createElement('div');
                 navItem.className = 'msds-nav-item';
                 navItem.setAttribute('data-chapter', chapter.章节序号);
-                navItem.onclick = () => scrollToChapter(chapter.章节序号);
+                navItem.onclick = () => scrollToChapterFromNav(chapter.章节序号);
+                const chapterTitle = chapter.章节序号 === 1 ? '化学品标识' : (chapter.章节标题 || '');
                 navItem.innerHTML = `
                     <div class="msds-nav-number">${chapter.章节序号}</div>
-                    <div class="msds-nav-title">${chapter.章节标题}</div>
+                    <div class="msds-nav-title">${chapterTitle}</div>
                 `;
                 navList.appendChild(navItem);
             });
@@ -7262,8 +7948,8 @@
             }
         }
         
-        // 滚动到指定章节
-        function scrollToChapter(chapterNumber) {
+        // 从导航侧边栏滚动到指定章节（会切换展开/折叠状态）
+        function scrollToChapterFromNav(chapterNumber) {
             const chapterElement = document.getElementById(`chapter-${chapterNumber}`);
             if (chapterElement) {
                 // 平滑滚动到章节
@@ -7337,7 +8023,7 @@
             }
         }
         
-        // 全部展开/折叠章节
+        // 全部展开/折叠章节（包括相关法律法规）
         function toggleAllChapters() {
             const chapterItems = document.querySelectorAll('.chapter-item');
             const btnText = document.getElementById('expandBtnText');
@@ -7345,6 +8031,7 @@
             
             currentAllExpanded = !currentAllExpanded;
             
+            // 控制MSDS章节
             chapterItems.forEach(item => {
                 if (currentAllExpanded) {
                     item.classList.add('active');
@@ -7352,6 +8039,26 @@
                     item.classList.remove('active');
                 }
             });
+            
+            // 控制相关法律法规区域
+            const regulationsSection = document.getElementById('regulationsSection');
+            if (regulationsSection) {
+                const titleEl = regulationsSection.querySelector('.regulations-title');
+                const containerEl = document.getElementById('regulationsContainer');
+                const loadingEl = document.getElementById('regulationsLoading');
+                
+                if (currentAllExpanded) {
+                    // 展开
+                    if (titleEl) titleEl.classList.remove('collapsed');
+                    if (containerEl) containerEl.classList.remove('collapsed');
+                    if (loadingEl) loadingEl.classList.remove('collapsed');
+                } else {
+                    // 折叠
+                    if (titleEl) titleEl.classList.add('collapsed');
+                    if (containerEl) containerEl.classList.add('collapsed');
+                    if (loadingEl) loadingEl.classList.add('collapsed');
+                }
+            }
             
             // 更新按钮文本和图标
             if (currentAllExpanded) {

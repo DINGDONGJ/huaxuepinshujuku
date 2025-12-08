@@ -1,0 +1,30 @@
+# Scraped data files
+msds_json/
+*.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

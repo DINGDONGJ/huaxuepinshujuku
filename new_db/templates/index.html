@@ -2896,8 +2896,8 @@
             <button class="sidebar-close" onclick="toggleSidebar()">×</button>
         </div>
         
-        <!-- 隐藏化学品数量统计 -->
-        <div class="list-stats" id="listStats" style="display: none;">
+        <!-- 化学品数量统计 -->
+        <div class="list-stats" id="listStats">
             <span id="statsText">加载中...</span>
         </div>
         
@@ -3009,9 +3009,11 @@
             <div class="search-hint">
                 <i class="fas fa-lightbulb"></i> 支持查询：中文名（如：甲醛）、英文名（如：formaldehyde）、CAS号（如：50-00-0）、别名（如：福尔马林）
             </div>
-            
-            <!-- 导入MSDS数据按钮已隐藏，只允许后端管理 -->
-            <button class="import-toggle-btn" onclick="toggleImport()" style="display: none;">
+                        <!-- 导入MSDS数据按钮已隐藏，只允许后端管理TODO
+            <button class="import-toggle-btn" onclick="toggleImport()" style="display: none;"> -->
+
+            <!-- 导入MSDS数据按钮 -->
+            <button class="import-toggle-btn" onclick="toggleImport()">
                 <i class="fas fa-upload"></i> 导入MSDS数据
             </button>
             

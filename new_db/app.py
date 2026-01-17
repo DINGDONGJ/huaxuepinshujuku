@@ -490,12 +490,43 @@ def search():
 
 @app.route('/api/list', methods=['GET'])
 def list_chemicals():
-    """获取所有化学品列表"""
+    """获取化学品列表（支持分页和搜索）"""
     try:
+        # 获取分页参数
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 100))  # 默认每页100条
+        keyword = request.args.get('keyword', '').strip()
+        
+        # 计算偏移量
+        offset = (page - 1) * limit
+        
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("""
+        # 构建查询条件
+        where_clause = ""
+        params = []
+        
+        if keyword:
+            where_clause = """
+                WHERE c.中文名 LIKE %s 
+                   OR c.英文名 LIKE %s 
+                   OR c.CAS号 LIKE %s
+            """
+            keyword_pattern = f'%{keyword}%'
+            params = [keyword_pattern, keyword_pattern, keyword_pattern]
+        
+        # 查询总数
+        count_sql = f"""
+            SELECT COUNT(DISTINCT c.编号)
+            FROM 化学品 c
+            {where_clause}
+        """
+        cursor.execute(count_sql, params)
+        total = cursor.fetchone()['COUNT(DISTINCT c.编号)']
+        
+        # 查询分页数据
+        data_sql = f"""
             SELECT 
                 c.编号,
                 c.CAS号,
@@ -505,16 +536,28 @@ def list_chemicals():
             FROM 化学品 c
             LEFT JOIN msds文档 m ON c.编号 = m.化学品编号
             LEFT JOIN msds章节 s ON m.编号 = s.文档编号
+            {where_clause}
             GROUP BY c.编号, c.CAS号, c.中文名, c.英文名
             ORDER BY c.中文名
-        """)
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(data_sql, params + [limit, offset])
         
         chemicals = cursor.fetchall()
         
         cursor.close()
         conn.close()
         
-        return jsonify({'chemicals': process_results(chemicals)})
+        return jsonify({
+            'chemicals': process_results(chemicals),
+            'pagination': {
+                'page': page,
+                'limit': limit,
+                'total': total,
+                'total_pages': (total + limit - 1) // limit,
+                'has_more': offset + len(chemicals) < total
+            }
+        })
     
     except Exception as e:
         return jsonify({'error': f'查询失败: {str(e)}'}), 500

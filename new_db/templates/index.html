@@ -6496,6 +6496,9 @@
         let allChemicals = [];
         let filteredChemicals = [];
         let currentChemicalId = null;  // 当前操作的化学品ID
+        let currentPage = 1;  // 当前页码
+        let totalPages = 1;   // 总页数
+        let isLoading = false;  // 是否正在加载
         let deleteCallback = null;  // 删除成功后的回调函数
 
         // 切换侧边栏显示/隐藏
@@ -6511,34 +6514,64 @@
                 sidebar.classList.add('active');
                 overlay.classList.add('active');
                 
-                // 如果列表为空，则加载列表
+                // 如果列表为空，则加载第一页
                 if (allChemicals.length === 0) {
-                    loadChemicalList();
+                    loadChemicalList(true);
                 }
             }
         }
 
-        // 加载化学品列表
-        async function loadChemicalList() {
+        // 加载化学品列表（支持分页和滚动加载）
+        async function loadChemicalList(reset = false) {
+            if (isLoading) return;
+            
+            // 如果是重置，清空数据
+            if (reset) {
+                currentPage = 1;
+                allChemicals = [];
+                filteredChemicals = [];
+            }
+            
+            // 如果已经加载完所有数据，不再请求
+            if (!reset && currentPage > totalPages && totalPages > 0) {
+                return;
+            }
+            
+            isLoading = true;
             const contentDiv = document.getElementById('sidebarContent');
             const statsDiv = document.getElementById('statsText');
             
             try {
-                contentDiv.innerHTML = '<div class="loading-spinner"><div><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';
-                statsDiv.textContent = '加载中...';
+                // 显示加载状态
+                if (reset) {
+                    contentDiv.innerHTML = '<div class="loading-spinner"><div><i class="fas fa-spinner fa-spin"></i> 加载中...</div></div>';
+                    statsDiv.textContent = '加载中...';
+                }
                 
-                const response = await fetch('/api/list');
+                const keyword = document.getElementById('sidebarSearchInput').value.trim();
+                const response = await fetch(`/api/list?page=${currentPage}&limit=100&keyword=${encodeURIComponent(keyword)}`);
                 const data = await response.json();
                 
                 if (response.ok) {
-                    allChemicals = data.chemicals || [];
+                    // 追加数据
+                    allChemicals = [...allChemicals, ...data.chemicals];
                     filteredChemicals = [...allChemicals];
                     
-                    // 更新统计信息
-                    statsDiv.textContent = `共 ${allChemicals.length} 种化学品`;
+                    // 更新分页信息
+                    if (data.pagination) {
+                        totalPages = data.pagination.total_pages;
+                        currentPage = data.pagination.page + 1;
+                        
+                        // 更新统计信息
+                        if (keyword) {
+                            statsDiv.textContent = `找到 ${data.pagination.total} 种化学品`;
+                        } else {
+                            statsDiv.textContent = `共 ${data.pagination.total} 种化学品`;
+                        }
+                    }
                     
                     // 渲染列表
-                    renderChemicalList(filteredChemicals);
+                    renderChemicalList(filteredChemicals, reset);
                 } else {
                     throw new Error(data.error || '加载失败');
                 }
@@ -6550,11 +6583,13 @@
                     </div>
                 `;
                 statsDiv.textContent = '加载失败';
+            } finally {
+                isLoading = false;
             }
         }
 
         // 渲染化学品列表
-        function renderChemicalList(chemicals) {
+        function renderChemicalList(chemicals, reset = false) {
             const contentDiv = document.getElementById('sidebarContent');
             
             if (chemicals.length === 0) {
@@ -6569,6 +6604,12 @@
             }
             
             let html = '';
+            
+            // 如果是重置，清空内容
+            if (reset) {
+                contentDiv.innerHTML = '';
+            }
+            
             chemicals.forEach(chem => {
                 const cas = chem.CAS号 ? highlightCASNumbers(chem.CAS号) : '<span style="color: #999;">无CAS号</span>';
                 const englishName = chem.英文名 || '<span style="color: #999;">无英文名</span>';
@@ -6593,47 +6634,66 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 删除按钮已隐藏，只允许后端管理 -->
-                        <!--
-                        <div class="chemical-list-item-actions">
-                            <button class="action-btn-icon" onclick="event.stopPropagation(); showDeleteConfirm(${chem.编号}, '${chem.中文名.replace(/'/g, "\\'")}', '${chem.CAS号 || ''}');" title="删除">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                        -->
                     </div>
                 `;
             });
             
-            contentDiv.innerHTML = html;
+            // 添加"加载更多"按钮
+            if (currentPage <= totalPages) {
+                html += `
+                    <div style="padding: 20px; text-align: center;">
+                        <button onclick="loadChemicalList()" class="btn-primary" style="width: 90%;">
+                            <i class="fas fa-arrow-down"></i> 加载更多 (${currentPage - 1}/${totalPages})
+                        </button>
+                    </div>
+                `;
+            }
+            
+            if (reset) {
+                contentDiv.innerHTML = html;
+            } else {
+                contentDiv.innerHTML += html;
+            }
+            
+            // 添加滚动监听（自动加载更多）
+            setupScrollListener();
+        }
+        
+        // 设置滚动监听
+        function setupScrollListener() {
+            const contentDiv = document.getElementById('sidebarContent');
+            
+            // 移除旧的监听器
+            contentDiv.removeEventListener('scroll', handleScroll);
+            
+            // 添加新的监听器
+            contentDiv.addEventListener('scroll', handleScroll);
+        }
+        
+        // 处理滚动事件
+        function handleScroll(e) {
+            const contentDiv = e.target;
+            const scrollTop = contentDiv.scrollTop;
+            const scrollHeight = contentDiv.scrollHeight;
+            const clientHeight = contentDiv.clientHeight;
+            
+            // 滚动到底部前100px时，自动加载更多
+            if (scrollHeight - scrollTop - clientHeight < 100) {
+                if (!isLoading && currentPage <= totalPages) {
+                    loadChemicalList();
+                }
+            }
         }
 
-        // 过滤化学品列表
+        // 过滤化学品列表（使用后端搜索）
+        let searchTimeout;
         function filterChemicalList() {
-            const searchInput = document.getElementById('sidebarSearchInput');
-            const keyword = searchInput.value.trim().toLowerCase();
-            
-            if (!keyword) {
-                filteredChemicals = [...allChemicals];
-            } else {
-                filteredChemicals = allChemicals.filter(chem => {
-                    return (
-                        (chem.中文名 && chem.中文名.toLowerCase().includes(keyword)) ||
-                        (chem.英文名 && chem.英文名.toLowerCase().includes(keyword)) ||
-                        (chem.CAS号 && chem.CAS号.includes(keyword))
-                    );
-                });
-            }
-            
-            // 更新统计信息
-            const statsDiv = document.getElementById('statsText');
-            if (keyword) {
-                statsDiv.textContent = `找到 ${filteredChemicals.length} 种化学品（共 ${allChemicals.length} 种）`;
-            } else {
-                statsDiv.textContent = `共 ${allChemicals.length} 种化学品`;
-            }
-            
-            renderChemicalList(filteredChemicals);
+            // 防抖：延迟500ms执行搜索
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                // 重置并重新加载
+                loadChemicalList(true);
+            }, 500);
         }
 
         // 从列表中选择化学品

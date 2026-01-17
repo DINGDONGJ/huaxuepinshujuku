@@ -195,51 +195,35 @@ def call_siliconflow_api(messages, temperature=0.7, max_tokens=5000, timeout=Non
 
 def construct_compatibility_prompt(chemicals_data):
     """
-    构建化学品兼容性分析的Prompt
+    构建化学品兼容性分析的Prompt（精简版）
     
     参数:
         chemicals_data: 化学品数据列表
     """
-    prompt = f"""你是专业的化学品安全分析专家。请分析以下{len(chemicals_data)}个化学品的共存安全性。回复尽量要快!
-
-"""
-    
-    # 添加每个化学品的关键信息
+    # 构建化学品信息（紧凑格式）
+    chem_list = []
     for i, chem in enumerate(chemicals_data, 1):
-        prompt += f"""【化学品{i}】{chem['name']}
-CAS号: {chem.get('cas', '未知')}
-分子式: {chem.get('formula', '未知')}
-GHS分类（前5项）: {', '.join(chem.get('ghs_categories', ['未提供'])[:5])}
-不相容物质（前5项）: {', '.join(chem.get('incompatible', ['未提供'])[:5])}
-
-"""
+        ghs = ', '.join(chem.get('ghs_categories', [])[:5]) or '无'
+        incomp = ', '.join(chem.get('incompatible', [])[:5]) or '无'
+        chem_list.append(
+            f"【{i}】{chem['name']} (CAS:{chem.get('cas','?')}, 式:{chem.get('formula','?')})\n"
+            f"    GHS: {ghs}\n"
+            f"    禁配: {incomp}"
+        )
     
-    prompt += """
-请根据以上信息判断这些化学品的共存安全性，并使用以下JSON格式输出：
+    prompt = f"""分析以下{len(chemicals_data)}个化学品的共存安全性：
 
-```json
-{
-  "risk_level": "safe" 或 "conditional" 或 "incompatible",
-  "reason": "详细说明风险等级的原因",
-  "conditions": "如果是conditional，说明需要满足的安全条件；否则为空字符串",
-  "reactions": ["如存在必然或高风险的化学反应，请写出配平的化学反应方程式；没有则返回空数组"]
-}
-```
+{chr(10).join(chem_list)}
 
-**风险等级定义：**
-- **safe**: 完全安全共存，无明显化学反应风险，物理化学性质相容
-- **conditional**: 需谨慎共存，存在一定风险但通过适当措施可控（如隔离存放、通风、温度控制等）
-- **incompatible**: 严禁共存，会发生剧烈反应、爆炸、放出有毒气体等严重后果
+输出JSON格式：
+{{"risk_level":"safe|conditional|incompatible","reason":"原因说明","conditions":"安全措施(仅conditional需要,否则空字符串)","reactions":["化学反应方程式"]}}
 
-**分析要求：**
-1. 仅输出上述JSON结构，勿添加额外文字说明。
-2. risk_level 必须是 "safe"、"conditional" 或 "incompatible" 之一。
-3. 当 risk_level 为 "conditional" 时，conditions 必须说明具体的安全措施（如"需在通风条件下隔离存放，避免直接接触"）。
-4. 若存在潜在或显著的化学反应，请在 reactions 中列出配平的方程式；否则返回空数组。
-5. 分析重点参考MSDS的第2章（危险性概述）与第10章（稳定性和反应性）内容。
+说明：
+- safe: 安全共存,无明显反应风险
+- conditional: 需防护措施可控(如隔离/通风/温控)
+- incompatible: 严禁共存,会剧烈反应/爆炸/放毒气
 
-请开始分析：
-"""
+仅输出JSON,勿添加其他文字。"""
     
     return prompt
 
@@ -260,7 +244,7 @@ def analyze_compatibility_with_ai(chemicals_data):
     messages = [
         {
             "role": "system",
-            "content": "你是专业的化学品安全分析专家，擅长分析化学品的共存安全性。你必须严格按照JSON格式输出分析结果。"
+            "content": "你是化学品安全专家，分析化学品共存安全性。严格按JSON格式输出，不要添加额外说明。"
         },
         {
             "role": "user",

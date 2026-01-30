@@ -1,21 +1,6 @@
 @echo off
 chcp 65001 >nul
-title MSDS Query System - Web Application
-
-echo.
-echo ========================================================
-echo        MSDS Query System - Web Application           
-echo ========================================================
-echo.
-echo Starting web server...
-echo.
-echo Access URL: http://localhost:5001
-echo Database: Chemical Safety Database
-echo.
-echo Press Ctrl+C to stop server
-echo.
-echo ========================================================
-echo.
+title 易链危化品智能查询系统
 
 python app.py
 

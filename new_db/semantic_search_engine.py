@@ -49,19 +49,21 @@ class LocalSemanticSearchEngine:
         }
     }
     
-    def __init__(self, model_name='paraphrase-multilingual-MiniLM-L12-v2', cache_dir='semantic_cache'):
+    def __init__(self, model_name='paraphrase-multilingual-MiniLM-L12-v2', cache_dir='semantic_cache', quiet=False):
         """
         初始化语义搜索引擎
         
         参数:
             model_name: 模型名称（推荐使用默认值）
             cache_dir: 缓存目录
+            quiet: 静默模式，不输出加载信息
         """
         if not DEPENDENCIES_AVAILABLE:
             raise ImportError("请先安装依赖: pip install sentence-transformers scikit-learn")
         
         self.model_name = model_name
         self.cache_dir = cache_dir
+        self.quiet = quiet
         self.embeddings_file = os.path.join(cache_dir, 'embeddings.pkl')
         self.metadata_file = os.path.join(cache_dir, 'metadata.json')
         
@@ -69,14 +71,14 @@ class LocalSemanticSearchEngine:
         os.makedirs(cache_dir, exist_ok=True)
         
         # 加载模型
-        print(f"📦 正在加载模型: {model_name}")
-        print(f"   模型信息: {self.MODELS.get(model_name, {})}")
-        start_time = time.time()
+        if not quiet:
+            print(f"📦 正在加载模型: {model_name}")
+            print(f"   模型信息: {self.MODELS.get(model_name, {})}")
         
         self.model = SentenceTransformer(model_name)
         
-        load_time = time.time() - start_time
-        print(f"✅ 模型加载完成 (耗时: {load_time:.2f}秒)")
+        if not quiet:
+            print(f"✅ 模型加载完成")
         
         # 向量缓存
         self.embeddings = {}  # {chemical_id: numpy.array}
@@ -92,7 +94,6 @@ class LocalSemanticSearchEngine:
             if os.path.exists(self.embeddings_file):
                 with open(self.embeddings_file, 'rb') as f:
                     self.embeddings = pickle.load(f)
-                print(f"✅ 加载了 {len(self.embeddings)} 个化学品的向量缓存")
             
             # 加载元数据
             if os.path.exists(self.metadata_file):
@@ -102,7 +103,8 @@ class LocalSemanticSearchEngine:
                     self.metadata = {int(k): v for k, v in data.items()}
         
         except Exception as e:
-            print(f"⚠️  加载缓存失败: {e}")
+            if not self.quiet:
+                print(f"⚠️  加载缓存失败: {e}")
             self.embeddings = {}
             self.metadata = {}
     

@@ -27,36 +27,16 @@ os.makedirs(app.config['PDF_FOLDER'], exist_ok=True)
 
 # 初始化法规内容索引器
 regulation_indexer = RegulationContentIndexer()
-print("📚 加载法规内容索引...")
-if regulation_indexer.load_index():
-    print(f"✅ 索引加载成功！共 {regulation_indexer.index['stats']['total_files']} 个法规文件")
-else:
-    print("⚠️  索引文件不存在，将跳过内容匹配功能")
-    print("   提示：运行 python regulation_content_indexer.py 构建索引")
+regulation_indexer.load_index()  # 静默加载
 
-# 初始化语义搜索引擎（可选功能）
+# 初始化语义搜索引擎（可选功能，静默加载）
 try:
     from semantic_search_engine import LocalSemanticSearchEngine
-    print("🤖 正在加载语义搜索引擎...")
-    semantic_engine = LocalSemanticSearchEngine()
+    semantic_engine = LocalSemanticSearchEngine(quiet=True)
     SEMANTIC_SEARCH_ENABLED = True
-    stats = semantic_engine.get_stats()
-    print(f"✅ 语义搜索引擎已加载 ({stats['total_chemicals']} 个化学品)")
-except ImportError:
+except:
     SEMANTIC_SEARCH_ENABLED = False
     semantic_engine = None
-    print("⚠️  语义搜索未启用（缺少依赖）")
-    print("   安装: pip install sentence-transformers scikit-learn")
-    print("   构建索引: python build_semantic_index.py")
-except FileNotFoundError:
-    SEMANTIC_SEARCH_ENABLED = False
-    semantic_engine = None
-    print("⚠️  语义搜索未启用（索引未构建）")
-    print("   构建索引: python build_semantic_index.py")
-except Exception as e:
-    SEMANTIC_SEARCH_ENABLED = False
-    semantic_engine = None
-    print(f"⚠️  语义搜索加载失败: {e}")
 
 # 数据库配置
 DB_CONFIG = {
@@ -1231,6 +1211,15 @@ def serve_pdf(filename):
     except FileNotFoundError:
         return jsonify({'error': 'PDF文件未找到'}), 404
 
+@app.route('/agreement-pdf/<path:filename>')
+def serve_agreement_pdf(filename):
+    """提供协议PDF文件访问"""
+    try:
+        agreement_folder = os.path.join(os.path.dirname(__file__), '协议pdf')
+        return send_from_directory(agreement_folder, filename)
+    except FileNotFoundError:
+        return jsonify({'error': '协议文件未找到'}), 404
+
 @app.route('/api/search-multiple', methods=['POST'])
 def search_multiple():
     """多化学品查询接口（通过化学品ID）"""
@@ -1653,11 +1642,7 @@ def check_compatibility_ai():
         return jsonify({'error': f'AI分析失败: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    print("=" * 60)
-    print("🔬 精简版危化品数据库 Web应用")
-    print("=" * 60)
-    print("📍 访问地址: http://localhost:5001")
-    print("💡 数据库: 危化品简化数据库")
-    print("=" * 60)
+    print("[*] 易链危化品智能查询系统")
+    print("[*] 访问地址: http://localhost:5001")
     app.run(host='0.0.0.0', port=5001, debug=True)
 

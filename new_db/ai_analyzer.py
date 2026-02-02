@@ -14,7 +14,7 @@ import os
 # AI后端配置 - 选择使用哪个后端
 # ============================================================================
 # 可选值: "ollama", "siliconflow", "openai"
-AI_BACKEND = os.environ.get("AI_BACKEND", "siliconflow")  # 默认使用硅基流动API
+AI_BACKEND = os.environ.get("AI_BACKEND", "ollama")  # 默认使用本地部署
 
 # ============================================================================
 # Ollama 本地配置（推荐，免费且隐私安全）
@@ -29,16 +29,16 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")  # 推荐模型
 # - mistral:7b       (快速响应)
 
 # ============================================================================
-# 硅基流动API配置（云端，需要API Key）
+# 硅基流动API配置（云端，需要API Key，测试用）
 # ============================================================================
-SILICONFLOW_API_KEY = os.environ.get("SILICONFLOW_API_KEY", "sk-qmquiwutnqvgxmbivsqrnpunwnnmufnpbdptwiqnfczqtpfp")
+SILICONFLOW_API_KEY = os.environ.get("SILICONFLOW_API_KEY", "your_key")
 SILICONFLOW_API_BASE = "https://api.siliconflow.cn/v1"
 SILICONFLOW_MODEL = "Qwen/QwQ-32B"  # 云端推理模型
 
 # ============================================================================
-# OpenAI兼容API配置（可用于其他兼容服务）
+# OpenAI兼容API配置（可用于其他兼容服务，测试用）
 # ============================================================================
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "your_key")
 OPENAI_API_BASE = os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
 

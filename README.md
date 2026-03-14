@@ -21,7 +21,7 @@
 - Web 服务入口：`new_db/app.py`
 - 前端页面：`new_db/templates/index.html`
 - 数据库结构：`new_db/init_simple_db.sql`
-- 数据库完整备份：`database_backup_clean.sql`
+- 数据库完整备份：`database_backup_clean_utf8.sql`
 - 爬虫脚本：`new_db/scrape_to_json.py`
 - 语义索引构建：`new_db/build_semantic_index.py`
 - 法规映射配置：`new_db/regulation_mapping.json`
@@ -31,7 +31,7 @@
 当前数据资产规模：
 
 - `new_db/msds_json`：2609 个 JSON 文件
-- `database_backup_clean.sql`：2609 条化学品、2609 条 MSDS 文档、41736 条 MSDS 章节
+- `database_backup_clean_utf8.sql`：2609 条化学品、2609 条 MSDS 文档、41736 条 MSDS 章节
 - `new_db/化学品法规pdf`：475 个法规 PDF
 - `new_db/化学品法规md`：474 个法规 Markdown
 - `new_db/协议pdf`：3 个协议/声明 PDF
@@ -89,7 +89,9 @@
 .
 ├─ README.md
 ├─ 运行指南.md
-├─ database_backup_clean.sql
+├─ docs/
+│  └─ 优化建议.md
+├─ database_backup_clean_utf8.sql
 └─ new_db/
    ├─ app.py
    ├─ init_simple_db.sql
@@ -111,9 +113,9 @@
 以下是当前代码状态下接手时应先知道的事项：
 
 - `new_db/app.py` 和 `new_db/build_semantic_index.py` 中的数据库配置目前是硬编码的。
-- 根目录备份文件名是 `database_backup_clean.sql`，不是部分旧脚本里写的 `database_backup.sql`。
+- 当前工作区可直接导入的备份文件是 `database_backup_clean_utf8.sql`。
 - `new_db/requirements.txt` 只覆盖 Web 基础依赖，不包含爬虫和语义搜索的全部依赖。
-- 仓库里存在历史脚本和重复目录，建议优先以 `new_db/app.py`、`database_backup_clean.sql` 和本 README/运行指南为准。
+- 仓库里存在历史脚本和重复目录，建议优先以 `new_db/app.py`、`database_backup_clean_utf8.sql` 和本 README/运行指南为准。
 
 ## 如何运行
 
@@ -130,11 +132,15 @@
 - 爬虫依赖安装
 - 常见问题处理
 
+补充文档：
+
+- [docs/优化建议.md](./docs/优化建议.md)
+
 ## 推荐接手顺序
 
 如果你是刚接手这个项目，建议按下面顺序进入：
 
 1. 先读 `new_db/app.py`，理解实际 API 和系统边界。
-2. 再看 `new_db/init_simple_db.sql` 和 `database_backup_clean.sql`，确认数据模型和样本规模。
+2. 再看 `new_db/init_simple_db.sql` 和 `database_backup_clean_utf8.sql`，确认数据模型和样本规模。
 3. 按 [运行指南.md](./运行指南.md) 把项目先跑起来。
 4. 最后再看 `new_db/scrape_to_json.py`、`new_db/semantic_search_engine.py` 和 `new_db/ai_analyzer.py` 这些可选模块。

@@ -1324,6 +1324,313 @@
             font-size: 14px;
         }
 
+        .label-preview-btn {
+            background: linear-gradient(135deg, #10b981 0%, #0f9f73 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .label-preview-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+
+        .label-preview-btn:active {
+            transform: translateY(0);
+        }
+
+        .label-preview-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.72);
+            z-index: 10030;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .label-preview-overlay.show {
+            display: flex;
+        }
+
+        .label-preview-modal {
+            width: min(96vw, 1320px);
+            max-height: 94vh;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .label-preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .label-preview-header h3 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .label-preview-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .label-preview-action-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .label-preview-action-btn.primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            color: #fff;
+        }
+
+        .label-preview-action-btn.secondary {
+            background: #e5e7eb;
+            color: #334155;
+        }
+
+        .label-preview-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+        }
+
+        .label-preview-stage {
+            padding: 22px;
+            background: #e5e7eb;
+            overflow: auto;
+        }
+
+        .label-preview-scale-box {
+            min-width: 1120px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .label-sheet-export {
+            width: 1120px;
+            height: 800px;
+            padding: 18px;
+            background:
+                linear-gradient(#ffffff, #ffffff) padding-box,
+                repeating-linear-gradient(
+                    45deg,
+                    #ffd400 0 18px,
+                    #ffd400 18px 36px,
+                    #101010 36px 54px,
+                    #101010 54px 72px
+                ) border-box;
+            border: 18px solid transparent;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.16);
+            color: #222;
+            overflow: hidden;
+        }
+
+        .label-sheet-inner {
+            height: 100%;
+            background: #fff;
+            padding: 28px 34px 22px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .label-sheet-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .label-sheet-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .label-chemical-name {
+            margin: 0;
+            font-size: 60px;
+            line-height: 1;
+            font-weight: 800;
+            color: #2c2c2c;
+            word-break: break-word;
+        }
+
+        .label-chemical-name.is-long {
+            font-size: 48px;
+        }
+
+        .label-chemical-name.is-very-long {
+            font-size: 40px;
+        }
+
+        .label-cas-line {
+            margin-top: 18px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #3f3f46;
+        }
+
+        .label-signal-word {
+            margin-top: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 148px;
+            height: 52px;
+            padding: 0 24px;
+            background: #000;
+            color: #ffd400;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .label-ghs-group {
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            gap: 18px;
+            min-width: 220px;
+            padding-top: 10px;
+        }
+
+        .label-ghs-group img {
+            width: 92px;
+            height: 92px;
+            object-fit: contain;
+        }
+
+        .label-ghs-empty {
+            color: #64748b;
+            font-size: 16px;
+            font-weight: 600;
+            padding-top: 18px;
+        }
+
+        .label-sheet-main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 330px 1fr;
+            gap: 38px;
+            margin-top: 22px;
+            min-height: 0;
+        }
+
+        .label-left-panel {
+            padding-right: 4px;
+        }
+
+        .label-hazard-list {
+            margin: 0;
+            padding-left: 26px;
+        }
+
+        .label-hazard-list li {
+            margin-bottom: 14px;
+            font-size: 18px;
+            line-height: 1.45;
+            font-weight: 700;
+            color: #2b2b2b;
+        }
+
+        .label-right-panel {
+            min-width: 0;
+        }
+
+        .label-section {
+            margin-bottom: 14px;
+        }
+
+        .label-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .label-section-title {
+            font-size: 26px;
+            line-height: 1.15;
+            font-weight: 800;
+            color: #262626;
+            margin-bottom: 6px;
+        }
+
+        .label-section-title::before {
+            content: '【';
+        }
+
+        .label-section-title::after {
+            content: '】';
+        }
+
+        .label-section-text {
+            font-size: 17px;
+            line-height: 1.56;
+            color: #464646;
+            word-break: break-word;
+        }
+
+        .label-ppe-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding-top: 6px;
+        }
+
+        .label-ppe-item {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: #0b5e88;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12);
+        }
+
+        .label-sheet-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            margin-top: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #2f2f2f;
+        }
+
         /* 删除按钮样式 */
         .delete-btn {
             background: #dc3545;
@@ -3081,6 +3388,7 @@
     <!-- Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <!-- 删除确认对话框 -->
@@ -3181,6 +3489,25 @@
                 <div class="pdf-sidebar-content" id="pdfSidebarContent">
                     <div class="no-results">暂无匹配结果</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="label-preview-overlay" id="labelPreviewOverlay" onclick="if (event.target === this) closeLabelPreview();">
+        <div class="label-preview-modal" onclick="event.stopPropagation();">
+            <div class="label-preview-header">
+                <h3><i class="fas fa-sign-hanging"></i> 场所标签预览</h3>
+                <div class="label-preview-actions">
+                    <button class="label-preview-action-btn primary" onclick="downloadCurrentLabel()">
+                        <i class="fas fa-download"></i> 下载 PNG
+                    </button>
+                    <button class="label-preview-action-btn secondary" onclick="closeLabelPreview()">
+                        <i class="fas fa-times"></i> 关闭
+                    </button>
+                </div>
+            </div>
+            <div class="label-preview-stage">
+                <div class="label-preview-scale-box" id="labelPreviewBody"></div>
             </div>
         </div>
     </div>
@@ -3685,6 +4012,8 @@
         // 使用化学品标签搜索
         async function searchWithTag(chemical, additionalQuery) {
             const resultsSection = document.getElementById('resultsSection');
+            currentLabelData = null;
+            closeLabelPreview(true);
             resultsSection.innerHTML = '<div class="loading">正在查询化学品信息...</div>';
             resultsSection.classList.add('show');
 
@@ -3736,6 +4065,8 @@
         // 使用关键词搜索（原有逻辑）
         async function searchWithKeyword(keyword) {
             const resultsSection = document.getElementById('resultsSection');
+            currentLabelData = null;
+            closeLabelPreview(true);
             resultsSection.innerHTML = '<div class="loading">正在查询</div>';
             resultsSection.classList.add('show');
 
@@ -3794,6 +4125,7 @@
         function displayResults(data) {
             const basic = data.basic_info;
             const chapters = data.msds_chapters;
+            currentLabelData = data.label_data && data.label_data.available ? data.label_data : null;
 
             // 保存当前化学品信息供PDF搜索使用
             currentChemicalInfo = {
@@ -3810,6 +4142,11 @@
                             <span class="en-name">${basic.英文名 || ''}</span>
                         </div>
                         <div style="display: flex; gap: 10px;">
+                            ${currentLabelData ? `
+                            <button class="label-preview-btn" onclick="openLabelPreview()">
+                                <i class="fas fa-image"></i> 生成场所标签
+                            </button>
+                            ` : ''}
                             <button class="regulation-query-btn" onclick="queryRegulation('${basic.中文名.replace(/'/g, "\\'")}');">
                                 <i class="fas fa-gavel"></i> 法规查询
                             </button>
@@ -5984,6 +6321,8 @@
 
         // 搜索多个化学品
         async function searchMultipleChemicals() {
+            currentLabelData = null;
+            closeLabelPreview(true);
             // 收集所有选中的化学品ID
             const chemicalIds = [];
             const selectedNames = [];
@@ -6049,6 +6388,7 @@
 
         // 显示多个化学品搜索结果（带AI分析）
         async function displayMultipleResultsWithAI(searchData, compatibilityData, selectedNames) {
+            currentLabelData = null;
             const resultsSection = document.getElementById('resultsSection');
             
             let html = '';
@@ -6851,6 +7191,209 @@
             }
             
             return notification; // 返回通知元素，便于手动移除
+        }
+
+        let currentLabelData = null;
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getLabelNameClass(name) {
+            const length = (name || '').length;
+            if (length >= 16) return 'is-very-long';
+            if (length >= 11) return 'is-long';
+            return '';
+        }
+
+        function buildLabelGhsHtml(images = []) {
+            if (!images.length) {
+                return '<div class="label-ghs-empty">暂无 GHS 图标</div>';
+            }
+
+            return images.map(img => `
+                <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.alt || 'GHS象形图')}" crossorigin="anonymous">
+            `).join('');
+        }
+
+        function buildLabelPpeHtml(items = []) {
+            if (!items.length) {
+                return '<div class="label-section-text">暂无个体防护图标。</div>';
+            }
+
+            return `
+                <div class="label-ppe-row">
+                    ${items.map(item => `
+                        <div class="label-ppe-item" title="${escapeHtml(item.hint || item.label || '')}">
+                            <i class="fas ${escapeHtml(item.icon || 'fa-shield-halved')}"></i>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function buildLabelSheetHtml(data) {
+            const hazardStatements = (data.hazard_statements && data.hazard_statements.length)
+                ? data.hazard_statements
+                : ['暂无危险性说明'];
+            const nameClass = getLabelNameClass(data.name);
+
+            return `
+                <div class="label-sheet-export" id="labelExportSheet">
+                    <div class="label-sheet-inner">
+                        <div class="label-sheet-top">
+                            <div class="label-sheet-meta">
+                                <h1 class="label-chemical-name ${nameClass}">${escapeHtml(data.name || '未命名化学品')}</h1>
+                                <div class="label-cas-line">CAS No.: ${escapeHtml(data.cas || '暂无')}</div>
+                                <div class="label-signal-word">${escapeHtml(data.signal_word || '危险')}</div>
+                            </div>
+                            <div class="label-ghs-group">
+                                ${buildLabelGhsHtml(data.ghs_images || [])}
+                            </div>
+                        </div>
+
+                        <div class="label-sheet-main">
+                            <div class="label-left-panel">
+                                <ul class="label-hazard-list">
+                                    ${hazardStatements.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                                </ul>
+                            </div>
+
+                            <div class="label-right-panel">
+                                <div class="label-section">
+                                    <div class="label-section-title">理化特性</div>
+                                    <div class="label-section-text">${escapeHtml(data.physical_summary || '暂无理化特性摘要。')}</div>
+                                </div>
+
+                                <div class="label-section">
+                                    <div class="label-section-title">预防</div>
+                                    <div class="label-section-text">${escapeHtml(data.prevention_summary || '暂无预防措施摘要。')}</div>
+                                </div>
+
+                                <div class="label-section">
+                                    <div class="label-section-title">应急</div>
+                                    <div class="label-section-text">${escapeHtml(data.emergency_summary || '暂无应急措施摘要。')}</div>
+                                </div>
+
+                                <div class="label-section">
+                                    <div class="label-section-title">贮存与处置</div>
+                                    <div class="label-section-text">${escapeHtml(data.storage_disposal_summary || '暂无贮存与处置摘要。')}</div>
+                                </div>
+
+                                <div class="label-section">
+                                    <div class="label-section-title">个体防护</div>
+                                    ${buildLabelPpeHtml(data.ppe_items || [])}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="label-sheet-footer">
+                            <div>紧急呼叫电话：${escapeHtml(data.emergency_phone || '119 / 120')}</div>
+                            <div>${escapeHtml(data.reference_note || '请参阅化学品安全技术说明书')}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLabelPreview() {
+            const previewBody = document.getElementById('labelPreviewBody');
+            if (!previewBody || !currentLabelData) {
+                return;
+            }
+
+            previewBody.innerHTML = buildLabelSheetHtml(currentLabelData);
+        }
+
+        function openLabelPreview() {
+            if (!currentLabelData || !currentLabelData.available) {
+                showNotification('当前化学品暂无可生成的标签数据', 'warning', 3000);
+                return;
+            }
+
+            renderLabelPreview();
+            document.getElementById('labelPreviewOverlay').classList.add('show');
+        }
+
+        function closeLabelPreview(clearData = false) {
+            const overlay = document.getElementById('labelPreviewOverlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+
+            if (clearData) {
+                currentLabelData = null;
+                const previewBody = document.getElementById('labelPreviewBody');
+                if (previewBody) {
+                    previewBody.innerHTML = '';
+                }
+            }
+        }
+
+        async function downloadCurrentLabel() {
+            if (!currentLabelData || !currentLabelData.available) {
+                showNotification('没有可导出的标签内容', 'warning', 3000);
+                return;
+            }
+
+            if (typeof html2canvas === 'undefined') {
+                showNotification('导出组件未加载完成，请稍后重试', 'error', 3500);
+                return;
+            }
+
+            const sourceSheet = document.getElementById('labelExportSheet');
+            if (!sourceSheet) {
+                showNotification('请先打开标签预览', 'warning', 2500);
+                return;
+            }
+
+            let offscreen = null;
+            try {
+                showNotification('正在生成标签图片...', 'info', 3500);
+
+                offscreen = document.createElement('div');
+                offscreen.style.position = 'fixed';
+                offscreen.style.left = '-20000px';
+                offscreen.style.top = '0';
+                offscreen.style.width = '1120px';
+                offscreen.style.height = '800px';
+                offscreen.style.pointerEvents = 'none';
+
+                const clonedSheet = sourceSheet.cloneNode(true);
+                clonedSheet.style.boxShadow = 'none';
+                offscreen.appendChild(clonedSheet);
+                document.body.appendChild(offscreen);
+
+                const canvas = await html2canvas(clonedSheet, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    width: 1120,
+                    height: 800,
+                    windowWidth: 1120,
+                    windowHeight: 800
+                });
+
+                const link = document.createElement('a');
+                link.download = `${currentLabelData.name || '化学品'}_场所标签.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                showNotification('标签图片已生成', 'success', 2500);
+            } catch (error) {
+                console.error('标签导出失败:', error);
+                showNotification('标签导出失败：' + error.message, 'error', 4000);
+            } finally {
+                if (offscreen && offscreen.parentNode) {
+                    offscreen.parentNode.removeChild(offscreen);
+                }
+            }
         }
 
         // 全局变量存储化学品列表
@@ -8493,12 +9036,16 @@
             }
         }
         
-        // ESC键关闭PDF查看器
+        // ESC键关闭弹层
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 const pdfViewer = document.getElementById('pdfViewerOverlay');
                 if (pdfViewer.classList.contains('show')) {
                     closePdfViewer();
+                }
+                const labelPreview = document.getElementById('labelPreviewOverlay');
+                if (labelPreview.classList.contains('show')) {
+                    closeLabelPreview();
                 }
             }
         });

@@ -9,6 +9,7 @@ import json
 from decimal import Decimal
 from datetime import datetime
 import os
+import re
 from regulation_content_indexer import RegulationContentIndexer
 from ai_analyzer import analyze_compatibility_with_ai, extract_chapter_summary
 from smart_chapter_locator import SmartChapterLocator
@@ -30,13 +31,13 @@ regulation_indexer = RegulationContentIndexer()
 regulation_indexer.load_index()  # 静默加载
 
 # 初始化语义搜索引擎（可选功能，静默加载）
+semantic_engine = None
 try:
     from semantic_search_engine import LocalSemanticSearchEngine
-    semantic_engine = LocalSemanticSearchEngine(quiet=True)
-    SEMANTIC_SEARCH_ENABLED = True
+    SEMANTIC_SEARCH_AVAILABLE = True
 except:
-    SEMANTIC_SEARCH_ENABLED = False
-    semantic_engine = None
+    LocalSemanticSearchEngine = None
+    SEMANTIC_SEARCH_AVAILABLE = False
 
 # 数据库配置
 DB_CONFIG = {
@@ -51,6 +52,37 @@ DB_CONFIG = {
 def get_db_connection():
     """获取数据库连接"""
     return pymysql.connect(**DB_CONFIG)
+
+
+def debug_search_log(message):
+    """记录search接口调试日志"""
+    try:
+        log_path = os.path.join(os.path.dirname(__file__), 'search_debug.log')
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(f"{datetime.now().isoformat()} {message}\n")
+    except Exception:
+        pass
+
+
+def get_semantic_engine():
+    """懒加载语义搜索引擎，避免服务启动时阻塞"""
+    global semantic_engine
+
+    if not SEMANTIC_SEARCH_AVAILABLE:
+        return None
+
+    if semantic_engine is False:
+        return None
+
+    if semantic_engine is None:
+        try:
+            semantic_engine = LocalSemanticSearchEngine(quiet=True)
+        except Exception as e:
+            print(f"⚠️  语义搜索初始化失败: {e}")
+            semantic_engine = False
+            return None
+
+    return semantic_engine
 
 def process_results(results):
     """处理查询结果，转换特殊类型"""
@@ -262,6 +294,400 @@ def extract_keywords_from_msds(chemical_name, cas_number, chapters):
     
     return list(keywords)
 
+
+def get_clean_lines(text):
+    """清洗章节文本，移除空行和无意义的编号行"""
+    if not text:
+        return []
+
+    lines = []
+    for raw_line in str(text).replace('\r', '\n').split('\n'):
+        line = re.sub(r'\s+', ' ', raw_line).strip()
+        if not line:
+            continue
+        if re.fullmatch(r'\d+\s*[.。]?', line):
+            continue
+        if re.fullmatch(r'[.。·•]+', line):
+            continue
+        lines.append(line)
+    return lines
+
+
+def dedupe_keep_order(items):
+    """去重但保持顺序"""
+    seen = set()
+    result = []
+    for item in items:
+        if not item:
+            continue
+        normalized = item.strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        result.append(normalized)
+    return result
+
+
+def truncate_text(text, max_length=120):
+    """截断文本，尽量保留完整语义"""
+    if not text:
+        return ''
+
+    text = re.sub(r'\s+', ' ', str(text)).strip('；;，,。 ')
+    if len(text) <= max_length:
+        return text
+
+    snippet = text[:max_length].rstrip('；;，,。 ')
+    cut_points = [snippet.rfind(mark) for mark in ['；', '。', '，', '、', ';', ',']]
+    cut_at = max(cut_points) if cut_points else -1
+
+    if cut_at >= max_length // 2:
+        snippet = snippet[:cut_at]
+
+    return snippet.rstrip('；;，,。 ') + '...'
+
+
+def join_fragments(fragments, max_length=150, separator='；'):
+    """按长度限制拼接多个短句"""
+    cleaned = []
+    for fragment in dedupe_keep_order(fragments):
+        fragment = fragment.strip('；;，,。 ')
+        if fragment:
+            cleaned.append(fragment)
+
+    if not cleaned:
+        return ''
+
+    result = []
+    for fragment in cleaned:
+        candidate = separator.join(result + [fragment])
+        if len(candidate) > max_length and result:
+            break
+        if len(fragment) > max_length and not result:
+            return truncate_text(fragment, max_length)
+        result.append(fragment)
+
+    final_text = separator.join(result)
+    if final_text and not final_text.endswith(('。', '！', '？')):
+        final_text += '。'
+    return final_text
+
+
+def extract_block_after_heading(content, heading, stop_headings=None, stop_prefixes=None):
+    """提取某个标题之后、下一个标题之前的文本块"""
+    lines = get_clean_lines(content)
+    if not lines:
+        return []
+
+    stop_headings = stop_headings or []
+    stop_prefixes = stop_prefixes or []
+    collecting = False
+    block = []
+
+    for line in lines:
+        if not collecting:
+            if line == heading or line.startswith(heading):
+                collecting = True
+            continue
+
+        if line in stop_headings:
+            break
+        if any(line.startswith(prefix) for prefix in stop_prefixes):
+            break
+
+        block.append(line)
+
+    return block
+
+
+def extract_subsection_text(content, title, all_titles):
+    """提取章节中某个子标题下的内容"""
+    lines = get_clean_lines(content)
+    if not lines:
+        return ''
+
+    collecting = False
+    block = []
+    title_set = set(all_titles)
+
+    for line in lines:
+        if not collecting:
+            if line == title:
+                collecting = True
+            continue
+
+        if line in title_set:
+            break
+        block.append(line)
+
+    return join_fragments(block, max_length=90)
+
+
+def strip_code_lines(lines, code_prefix):
+    """移除 H/P 代码行，仅保留说明文本"""
+    result = []
+    pattern = re.compile(rf'^{re.escape(code_prefix)}\d+', re.IGNORECASE)
+
+    for line in lines:
+        if pattern.match(line):
+            continue
+        result.append(line)
+
+    return result
+
+
+def extract_signal_word_from_chapter(content):
+    """提取第2章中的信号词"""
+    lines = get_clean_lines(content)
+    for idx, line in enumerate(lines):
+        if line == '信号词' and idx + 1 < len(lines):
+            return lines[idx + 1]
+
+    match = re.search(r'信号词\s*(危险|警告)', content or '')
+    if match:
+        return match.group(1)
+
+    return '危险'
+
+
+def extract_hazard_statements_from_chapter(content):
+    """提取第2章中的危险性说明"""
+    statements = extract_block_after_heading(
+        content,
+        '危险性说明',
+        stop_prefixes=['防范说明->', '危害描述->']
+    )
+    statements = strip_code_lines(statements, 'H')
+    statements = dedupe_keep_order(statements)
+
+    if statements:
+        return statements[:4]
+
+    overview_lines = extract_block_after_heading(
+        content,
+        '紧急情况概述',
+        stop_headings=['GHS危险性类别', 'GHS标签要素', '危险性说明']
+    )
+    overview_text = ' '.join(overview_lines)
+    if not overview_text:
+        return []
+
+    overview_parts = [
+        part.strip()
+        for part in re.split(r'[。；;]', overview_text)
+        if part.strip()
+    ]
+    return overview_parts[:4]
+
+
+def extract_label_value_map(content, labels):
+    """从类似“标题 -> 下一行值”的章节结构中提取键值"""
+    lines = get_clean_lines(content)
+    values = {}
+    label_set = set(labels)
+
+    for idx, line in enumerate(lines):
+        if line in label_set and line not in values:
+            if idx + 1 < len(lines) and lines[idx + 1] not in label_set:
+                values[line] = lines[idx + 1]
+
+    return values
+
+
+def extract_physical_summary(content):
+    """提取第9章理化特性摘要"""
+    fields = [
+        ('外观与性状', '外观'),
+        ('气味', '气味'),
+        ('熔点/凝固点(℃)', '熔点'),
+        ('初沸点和沸程(℃)', '沸点'),
+        ('闪点(闭杯，℃)', '闪点'),
+        ('相对密度(水=1)', '相对密度'),
+        ('溶解性(mg/L)', '溶解性'),
+        ('自燃温度(℃)', '引燃温度'),
+    ]
+    values = extract_label_value_map(content, [item[0] for item in fields])
+
+    fragments = []
+    for source_label, display_label in fields:
+        value = values.get(source_label)
+        if not value or value in ['无资料', '不适用', '无特殊气味']:
+            if source_label != '气味':
+                continue
+        if value:
+            if display_label == '外观':
+                fragments.append(f'外观：{value}')
+            else:
+                fragments.append(f'{display_label}：{value}')
+
+    return join_fragments(fragments, max_length=145)
+
+
+def extract_prevention_summary(chapter2_content='', chapter7_content=''):
+    """提取预防措施摘要"""
+    prevention_lines = extract_block_after_heading(
+        chapter2_content,
+        '防范说明->预防措施',
+        stop_prefixes=['防范说明->事故响应', '防范说明->安全储存', '防范说明->废弃处置', '危害描述->']
+    )
+    prevention_lines = strip_code_lines(prevention_lines, 'P')
+
+    if prevention_lines:
+        return join_fragments(prevention_lines[:5], max_length=170)
+
+    operation_lines = extract_block_after_heading(
+        chapter7_content,
+        '操作注意事项',
+        stop_headings=['储存注意事项']
+    )
+    return join_fragments(operation_lines[:5], max_length=170)
+
+
+def extract_first_aid_summary(content):
+    """提取第4章应急摘要"""
+    titles = [
+        '一般性建议',
+        '眼睛接触',
+        '皮肤接触',
+        '食入',
+        '吸入',
+        '急救人员的防护',
+        '对保护施救者的忠告',
+        '对医生的特别提示',
+    ]
+
+    summary_parts = []
+    for title in ['皮肤接触', '眼睛接触', '吸入', '食入']:
+        text = extract_subsection_text(content, title, titles)
+        if text:
+            summary_parts.append(f'{title}：{truncate_text(text, 42)}')
+
+    return join_fragments(summary_parts, max_length=210)
+
+
+def extract_storage_disposal_summary(chapter7_content='', chapter13_content=''):
+    """提取贮存与处置摘要"""
+    storage_lines = extract_block_after_heading(
+        chapter7_content,
+        '储存注意事项'
+    )
+
+    disposal_lines = []
+    chapter13_lines = get_clean_lines(chapter13_content)
+    ignored_titles = {'废弃处置', '废弃化学品', '污染包装物', '废弃注意事项'}
+    for line in chapter13_lines:
+        if line in ignored_titles:
+            continue
+        disposal_lines.append(line)
+
+    fragments = []
+    fragments.extend(storage_lines[:4])
+    fragments.extend(disposal_lines[:2])
+
+    return join_fragments(fragments, max_length=180)
+
+
+def extract_ppe_items(chapter8_content=''):
+    """从第8章提取个体防护图标配置"""
+    if not chapter8_content:
+        return []
+
+    titles = [
+        '眼睛防护',
+        '手部防护',
+        '呼吸系统防护',
+        '皮肤和身体防护',
+    ]
+    sections = {title: extract_subsection_text(chapter8_content, title, titles) for title in titles}
+
+    items = []
+    if sections.get('眼睛防护') and sections['眼睛防护'] != '无资料。':
+        items.append({'key': 'goggles', 'label': '眼睛防护', 'icon': 'fa-glasses', 'hint': sections['眼睛防护']})
+    if sections.get('呼吸系统防护') and sections['呼吸系统防护'] != '无资料。':
+        items.append({'key': 'respirator', 'label': '呼吸防护', 'icon': 'fa-head-side-mask', 'hint': sections['呼吸系统防护']})
+
+    body_text = sections.get('皮肤和身体防护', '')
+    if body_text and body_text != '无资料。':
+        if '防护服' in body_text or '工作服' in body_text or '身体防护' in body_text:
+            items.append({'key': 'clothing', 'label': '防护服', 'icon': 'fa-user-shield', 'hint': body_text})
+        if '靴' in body_text or '鞋' in body_text:
+            items.append({'key': 'boots', 'label': '防护靴', 'icon': 'fa-shoe-prints', 'hint': body_text})
+
+    if sections.get('手部防护') and sections['手部防护'] != '无资料。':
+        items.append({'key': 'gloves', 'label': '防护手套', 'icon': 'fa-hand', 'hint': sections['手部防护']})
+
+    return items[:5]
+
+
+def build_label_data(basic_info, msds_chapters):
+    """将MSDS章节整理为场所标签所需结构"""
+    if not basic_info or not msds_chapters:
+        return {'available': False}
+
+    chapter_map = {}
+    for chapter in msds_chapters:
+        chapter_num = chapter.get('章节序号')
+        if chapter_num is not None:
+            chapter_map[int(chapter_num)] = chapter
+
+    chapter2 = chapter_map.get(2, {})
+    chapter4 = chapter_map.get(4, {})
+    chapter7 = chapter_map.get(7, {})
+    chapter8 = chapter_map.get(8, {})
+    chapter9 = chapter_map.get(9, {})
+    chapter13 = chapter_map.get(13, {})
+
+    chapter2_content = chapter2.get('内容', '')
+    chapter4_content = chapter4.get('内容', '')
+    chapter7_content = chapter7.get('内容', '')
+    chapter8_content = chapter8.get('内容', '')
+    chapter9_content = chapter9.get('内容', '')
+    chapter13_content = chapter13.get('内容', '')
+
+    ghs_images = []
+    raw_images = chapter2.get('图片JSON') or chapter2.get('图片') or []
+    for image in raw_images:
+        image_url = image.get('url')
+        if not image_url:
+            continue
+        ghs_images.append({
+            'url': f"/msds_json/{str(image_url).replace('\\', '/')}",
+            'alt': image.get('alt') or 'GHS象形图'
+        })
+
+    hazard_statements = extract_hazard_statements_from_chapter(chapter2_content)
+    physical_summary = extract_physical_summary(chapter9_content)
+    prevention_summary = extract_prevention_summary(chapter2_content, chapter7_content)
+    emergency_summary = extract_first_aid_summary(chapter4_content)
+    storage_disposal_summary = extract_storage_disposal_summary(chapter7_content, chapter13_content)
+    ppe_items = extract_ppe_items(chapter8_content)
+
+    available = any([
+        hazard_statements,
+        physical_summary,
+        prevention_summary,
+        emergency_summary,
+        storage_disposal_summary,
+        ghs_images
+    ])
+
+    return {
+        'available': available,
+        'chemical_id': basic_info.get('编号'),
+        'name': basic_info.get('中文名', ''),
+        'cas': basic_info.get('CAS号', ''),
+        'signal_word': extract_signal_word_from_chapter(chapter2_content),
+        'hazard_statements': hazard_statements,
+        'ghs_images': ghs_images,
+        'physical_summary': physical_summary,
+        'prevention_summary': prevention_summary,
+        'emergency_summary': emergency_summary,
+        'storage_disposal_summary': storage_disposal_summary,
+        'ppe_items': ppe_items,
+        'emergency_phone': '119 / 120',
+        'reference_note': '请参阅化学品安全技术说明书'
+    }
+
 @app.route('/')
 def index():
     """首页"""
@@ -280,12 +706,15 @@ def search():
     """搜索化学品"""
     data = request.get_json()
     keyword = data.get('keyword', '')
+    debug_search_log(f"search:start keyword={keyword!r}")
     
     if not keyword:
+        debug_search_log("search:empty-keyword")
         return jsonify({'error': '请输入搜索关键词'}), 400
     
     try:
         conn = get_db_connection()
+        debug_search_log("search:db-connected")
         cursor = conn.cursor()
         
         # 优先精确匹配
@@ -303,6 +732,7 @@ def search():
         """, (keyword, keyword, keyword, keyword))
         
         result = cursor.fetchone()
+        debug_search_log(f"search:exact-result found={bool(result)}")
         search_type = 'exact'
         
         # 如果精确匹配没找到，再进行模糊匹配（优先匹配更长、更精确的名称）
@@ -328,6 +758,7 @@ def search():
             """, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%', f'%{keyword}%', keyword, f'%{keyword}%'))
             
             result = cursor.fetchone()
+            debug_search_log(f"search:fuzzy-result found={bool(result)}")
             search_type = 'fuzzy'
         
         # 如果模糊匹配也没找到，尝试提取关键词再匹配
@@ -381,41 +812,51 @@ def search():
                         LIMIT 1
                     """, (f'%{clean_keyword}%', f'%{clean_keyword}%', clean_keyword, f'%{clean_keyword}%'))
                     
-                    result = cursor.fetchone()
+                result = cursor.fetchone()
                 
                 if result:
+                    debug_search_log("search:keyword-extraction-hit")
                     search_type = 'keyword_extraction'
         
-        if not result and SEMANTIC_SEARCH_ENABLED:
-            # 使用语义搜索（降低阈值，提高召回率）
-            semantic_results = semantic_engine.search(keyword, top_k=3, threshold=0.3)
-            
-            if semantic_results:
-                # 如果找到多个结果，显示最佳匹配
-                best_match = semantic_results[0]
-                chemical_id = best_match['chemical_id']
-                search_type = 'semantic'
+        if not result:
+            semantic_instance = get_semantic_engine()
+            debug_search_log(f"search:semantic-instance available={bool(semantic_instance)}")
+
+            if semantic_instance:
+                # 使用语义搜索（降低阈值，提高召回率）
+                semantic_results = semantic_instance.search(keyword, top_k=3, threshold=0.3)
+                debug_search_log(f"search:semantic-results count={len(semantic_results) if semantic_results else 0}")
                 
-                if len(semantic_results) > 1:
-                    print(f"🤖 语义搜索找到 {len(semantic_results)} 个候选:")
-                    for i, r in enumerate(semantic_results, 1):
-                        print(f"   {i}. {r['name']} (相似度: {r['score']:.3f})")
-                    print(f"   选择最佳匹配: {best_match['name']}")
+                if semantic_results:
+                    # 如果找到多个结果，显示最佳匹配
+                    best_match = semantic_results[0]
+                    chemical_id = best_match['chemical_id']
+                    search_type = 'semantic'
+                    
+                    if len(semantic_results) > 1:
+                        print(f"🤖 语义搜索找到 {len(semantic_results)} 个候选:")
+                        for i, r in enumerate(semantic_results, 1):
+                            print(f"   {i}. {r['name']} (相似度: {r['score']:.3f})")
+                        print(f"   选择最佳匹配: {best_match['name']}")
+                    else:
+                        print(f"🤖 使用语义搜索找到: {best_match['name']} (相似度: {best_match['score']:.3f})")
                 else:
-                    print(f"🤖 使用语义搜索找到: {best_match['name']} (相似度: {best_match['score']:.3f})")
+                    cursor.close()
+                    conn.close()
+                    return jsonify({
+                        'error': '未找到该化学品',
+                        'suggestion': '尝试使用化学品的中文名、英文名或CAS号搜索'
+                    }), 404
             else:
-                cursor.close()
-                conn.close()
-                return jsonify({
-                    'error': '未找到该化学品',
-                    'suggestion': '尝试使用化学品的中文名、英文名或CAS号搜索'
-                }), 404
-        elif not result:
+                debug_search_log("search:semantic-instance unavailable")
+
+        if not result:
             cursor.close()
             conn.close()
             return jsonify({'error': '未找到该化学品'}), 404
         else:
             chemical_id = result['编号']
+        debug_search_log(f"search:chemical-id {chemical_id}")
         
         # 获取化学品基本信息和别名
         cursor.execute("""
@@ -433,6 +874,7 @@ def search():
         """, (chemical_id,))
         
         basic_info = cursor.fetchone()
+        debug_search_log(f"search:basic-info found={bool(basic_info)}")
         
         # 获取msds章节
         cursor.execute("""
@@ -451,21 +893,31 @@ def search():
         """, (chemical_id,))
         
         msds_chapters = cursor.fetchall()
+        debug_search_log(f"search:msds-count {len(msds_chapters)}")
         
         cursor.close()
         conn.close()
+        debug_search_log("search:db-closed")
+
+        processed_chapters = process_results(msds_chapters)
+        debug_search_log(f"search:processed-count {len(processed_chapters)}")
         
         # 分析查询意图，定位相关章节
         query_analysis = chapter_locator.analyze_query(keyword)
+        debug_search_log(f"search:query-analysis targets={query_analysis.get('target_chapters')}")
+        label_data = build_label_data(basic_info, processed_chapters)
+        debug_search_log(f"search:label-available {label_data.get('available')}")
         
         return jsonify({
             'basic_info': basic_info,
-            'msds_chapters': process_results(msds_chapters),
+            'msds_chapters': processed_chapters,
+            'label_data': label_data,
             'search_type': search_type,  # 告诉前端使用了哪种搜索方式
             'query_analysis': query_analysis  # 智能章节定位信息
         })
     
     except Exception as e:
+        debug_search_log(f"search:error {e}")
         return jsonify({'error': f'查询失败: {str(e)}'}), 500
 
 @app.route('/api/list', methods=['GET'])
@@ -808,7 +1260,8 @@ def autocomplete():
 @app.route('/api/semantic-search', methods=['POST'])
 def semantic_search():
     """语义搜索API - 支持自然语言查询"""
-    if not SEMANTIC_SEARCH_ENABLED:
+    semantic_instance = get_semantic_engine()
+    if not semantic_instance:
         return jsonify({
             'error': '语义搜索未启用',
             'message': '请先安装依赖并构建索引',
@@ -828,7 +1281,7 @@ def semantic_search():
     
     try:
         # 执行语义搜索
-        results = semantic_engine.search(query, top_k=top_k, threshold=threshold)
+        results = semantic_instance.search(query, top_k=top_k, threshold=threshold)
         
         # 如果找到结果，获取完整的化学品信息
         if results:
@@ -884,8 +1337,9 @@ def semantic_search():
 @app.route('/api/semantic-status', methods=['GET'])
 def semantic_status():
     """检查语义搜索状态"""
-    if SEMANTIC_SEARCH_ENABLED:
-        stats = semantic_engine.get_stats()
+    semantic_instance = get_semantic_engine()
+    if semantic_instance:
+        stats = semantic_instance.get_stats()
         return jsonify({
             'enabled': True,
             'stats': stats
